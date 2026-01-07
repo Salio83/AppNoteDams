@@ -13,6 +13,7 @@ const Schedule = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedEvent, setSelectedEvent] = useState(null);
 
     useEffect(() => {
         if (url) {
@@ -265,6 +266,7 @@ const Schedule = () => {
                                             return (
                                                 <div
                                                     key={idx}
+                                                    onClick={() => setSelectedEvent(evt)}
                                                     className={`absolute ${colors.bg} border ${colors.border} ${colors.text} rounded-lg p-1.5 text-xs overflow-hidden hover:z-20 hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer group flex flex-col`}
                                                     title={`${evt.title}\n${evt.location}`}
                                                     style={{
@@ -289,6 +291,92 @@ const Schedule = () => {
                     ))}
                 </div>
             </div>
+
+            {/* Event Detail Modal (Desktop) */}
+            {selectedEvent && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn"
+                    onClick={() => setSelectedEvent(null)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className={`p-4 ${getEventColor(selectedEvent.title).bg} ${getEventColor(selectedEvent.title).border} border-b`}>
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                    <h3 className={`font-bold text-lg ${getEventColor(selectedEvent.title).text}`}>
+                                        {selectedEvent.title}
+                                    </h3>
+                                    <p className={`text-sm opacity-80 ${getEventColor(selectedEvent.title).text}`}>
+                                        {selectedEvent.start.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedEvent(null)}
+                                    className="p-2 hover:bg-white/30 rounded-lg transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-5 space-y-4">
+                            {/* Horaires */}
+                            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-slate-800">
+                                        {selectedEvent.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - {selectedEvent.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                    <p className="text-sm text-slate-500">
+                                        Durée: {Math.floor((selectedEvent.end - selectedEvent.start) / (1000 * 60 * 60))}h{((selectedEvent.end - selectedEvent.start) / (1000 * 60)) % 60 > 0 ? `${((selectedEvent.end - selectedEvent.start) / (1000 * 60)) % 60}min` : ''}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Lieu */}
+                            {selectedEvent.location && (
+                                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-slate-800">Salle</p>
+                                        <p className="text-sm text-slate-500">{selectedEvent.location}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Description / Prof */}
+                            {selectedEvent.description && (
+                                <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+                                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+                                        <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-slate-800">Informations</p>
+                                        <p className="text-sm text-slate-500 whitespace-pre-wrap break-words">{selectedEvent.description}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -300,6 +388,7 @@ const MobileDayView = ({ weekStart, processedEventsByDay }) => {
         const today = new Date().getDay();
         return today >= 1 && today <= 5 ? today - 1 : 0;
     });
+    const [selectedEvent, setSelectedEvent] = useState(null);
 
     const MOBILE_WEEK_DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'];
 
@@ -311,6 +400,20 @@ const MobileDayView = ({ weekStart, processedEventsByDay }) => {
 
     const dayEvents = processedEventsByDay[selectedDayIndex] || [];
     const sortedEvents = [...dayEvents].sort((a, b) => a.start - b.start);
+
+    // Extraire les infos du prof depuis la description
+    const extractProfessor = (description) => {
+        if (!description) return null;
+        // Chercher le pattern courant dans les descriptions iCal
+        const lines = description.split('\n');
+        for (const line of lines) {
+            if (line.toLowerCase().includes('prof') || line.toLowerCase().includes('enseignant')) {
+                return line.replace(/^[^:]+:\s*/, '').trim();
+            }
+        }
+        // Sinon retourner la première ligne non vide comme fallback
+        return lines.find(l => l.trim().length > 0) || null;
+    };
 
     return (
         <div className="lg:hidden flex-1 flex flex-col min-h-0">
@@ -327,10 +430,10 @@ const MobileDayView = ({ weekStart, processedEventsByDay }) => {
                             key={day}
                             onClick={() => setSelectedDayIndex(index)}
                             className={`flex-1 py-2 px-1 rounded-lg text-center transition-all relative ${isSelected
-                                    ? 'bg-white shadow-sm text-slate-900'
-                                    : isToday
-                                        ? 'text-blue-600'
-                                        : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-white shadow-sm text-slate-900'
+                                : isToday
+                                    ? 'text-blue-600'
+                                    : 'text-slate-500 hover:text-slate-700'
                                 }`}
                         >
                             <div className={`text-xs font-semibold ${isSelected ? 'text-slate-900' : ''}`}>{day}</div>
@@ -364,7 +467,8 @@ const MobileDayView = ({ weekStart, processedEventsByDay }) => {
                         return (
                             <div
                                 key={idx}
-                                className={`${colors.bg} border ${colors.border} rounded-xl p-4 ${colors.text}`}
+                                onClick={() => setSelectedEvent(evt)}
+                                className={`${colors.bg} border ${colors.border} rounded-xl p-4 ${colors.text} cursor-pointer hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all`}
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex-1 min-w-0">
@@ -382,12 +486,99 @@ const MobileDayView = ({ weekStart, processedEventsByDay }) => {
                                     <span>
                                         Durée: {durationHours > 0 ? `${durationHours}h` : ''}{durationMins > 0 ? `${durationMins}min` : ''}
                                     </span>
+                                    <span className="text-[10px] opacity-60">Appuyez pour détails →</span>
                                 </div>
                             </div>
                         );
                     })
                 )}
             </div>
+
+            {/* Event Detail Modal */}
+            {selectedEvent && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn"
+                    onClick={() => setSelectedEvent(null)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className={`p-4 ${getEventColor(selectedEvent.title).bg} ${getEventColor(selectedEvent.title).border} border-b`}>
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                    <h3 className={`font-bold text-lg ${getEventColor(selectedEvent.title).text}`}>
+                                        {selectedEvent.title}
+                                    </h3>
+                                    <p className={`text-sm opacity-80 ${getEventColor(selectedEvent.title).text}`}>
+                                        {selectedEvent.start.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedEvent(null)}
+                                    className="p-2 hover:bg-white/30 rounded-lg transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-5 space-y-4">
+                            {/* Horaires */}
+                            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-slate-800">
+                                        {selectedEvent.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - {selectedEvent.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                    <p className="text-sm text-slate-500">
+                                        Durée: {Math.floor((selectedEvent.end - selectedEvent.start) / (1000 * 60 * 60))}h{((selectedEvent.end - selectedEvent.start) / (1000 * 60)) % 60 > 0 ? `${((selectedEvent.end - selectedEvent.start) / (1000 * 60)) % 60}min` : ''}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Lieu */}
+                            {selectedEvent.location && (
+                                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-slate-800">Salle</p>
+                                        <p className="text-sm text-slate-500">{selectedEvent.location}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Description / Prof */}
+                            {selectedEvent.description && (
+                                <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+                                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+                                        <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-slate-800">Informations</p>
+                                        <p className="text-sm text-slate-500 whitespace-pre-wrap break-words">{selectedEvent.description}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

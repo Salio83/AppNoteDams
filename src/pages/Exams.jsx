@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Calendar, Clock, MapPin, RefreshCw, Info } from 'lucide-react';
+import { AlertTriangle, Calendar, Clock, MapPin, RefreshCw, Info, X } from 'lucide-react';
 import { useSchedule } from '../context/ScheduleContext';
 
 const Exams = () => {
     const { exams, loading, error, lastUpdated, refreshData, getCacheAge } = useSchedule();
     const [filter, setFilter] = useState('all'); // 'all', 'S1', 'S2'
+    const [selectedExam, setSelectedExam] = useState(null);
 
     // Charger les données au premier rendu si pas encore chargées
     useEffect(() => {
@@ -43,7 +44,7 @@ const Exams = () => {
                         Examens détectés
                     </h2>
                     <p className="text-gray-500 text-sm mt-1">
-                        Détection automatique depuis votre emploi du temps
+                        Appuyez sur un examen pour voir les détails
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -65,12 +66,12 @@ const Exams = () => {
             </header>
 
             {/* Filtres semestre */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
                 <button
                     onClick={() => setFilter('all')}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all'
-                            ? 'bg-slate-900 text-white'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        ? 'bg-slate-900 text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                         }`}
                 >
                     Tous ({exams.length})
@@ -78,8 +79,8 @@ const Exams = () => {
                 <button
                     onClick={() => setFilter('S1')}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'S1'
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
                         }`}
                 >
                     Semestre 1 ({s1Count})
@@ -87,8 +88,8 @@ const Exams = () => {
                 <button
                     onClick={() => setFilter('S2')}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'S2'
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
                         }`}
                 >
                     Semestre 2 ({s2Count})
@@ -117,17 +118,18 @@ const Exams = () => {
                     </p>
                 </div>
             ) : (
-                <div className="grid gap-4">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                     {filteredExams.map((exam, index) => {
                         const urgency = getUrgencyBadge(exam.daysUntil);
                         return (
                             <div
                                 key={index}
-                                className={`rounded-xl border-2 p-5 transition-all hover:shadow-md ${getUrgencyClass(exam.daysUntil)}`}
+                                onClick={() => setSelectedExam(exam)}
+                                className={`rounded-xl border-2 p-4 transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] cursor-pointer ${getUrgencyClass(exam.daysUntil)}`}
                             >
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                                             <span className={`px-2 py-0.5 rounded-full text-xs font-bold text-white ${urgency.class}`}>
                                                 {urgency.text}
                                             </span>
@@ -135,45 +137,121 @@ const Exams = () => {
                                                 {exam.semester}
                                             </span>
                                         </div>
-                                        <h3 className="text-lg font-bold mb-1">{exam.title}</h3>
+                                        <h3 className="text-base font-bold mb-1 truncate">{exam.title}</h3>
                                         {exam.location && (
-                                            <p className="flex items-center gap-1 text-sm opacity-80">
-                                                <MapPin className="w-4 h-4" />
+                                            <p className="flex items-center gap-1 text-sm opacity-80 truncate">
+                                                <MapPin className="w-3 h-3" />
                                                 {exam.location}
                                             </p>
                                         )}
                                     </div>
-                                    <div className="text-right">
-                                        <div className="flex items-center gap-2 justify-end mb-1">
-                                            <Calendar className="w-4 h-4" />
-                                            <span className="font-semibold">
-                                                {new Date(exam.start).toLocaleDateString('fr-FR', {
-                                                    weekday: 'long',
-                                                    day: 'numeric',
-                                                    month: 'long'
-                                                })}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2 justify-end text-sm opacity-80">
-                                            <Clock className="w-4 h-4" />
-                                            {new Date(exam.start).toLocaleTimeString('fr-FR', {
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}
-                                            {' - '}
-                                            {new Date(exam.end).toLocaleTimeString('fr-FR', {
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}
-                                        </div>
-                                        <p className="mt-2 text-2xl font-bold">
-                                            J-{exam.daysUntil}
+                                    <div className="text-right shrink-0">
+                                        <p className="text-2xl font-bold">J-{exam.daysUntil}</p>
+                                        <p className="text-xs opacity-70">
+                                            {new Date(exam.start).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                                         </p>
                                     </div>
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-current/10 text-xs opacity-60 text-center">
+                                    Appuyez pour détails →
                                 </div>
                             </div>
                         );
                     })}
+                </div>
+            )}
+
+            {/* Exam Detail Modal */}
+            {selectedExam && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn"
+                    onClick={() => setSelectedExam(null)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className={`p-4 ${getUrgencyClass(selectedExam.daysUntil)} border-b-2`}>
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold text-white ${getUrgencyBadge(selectedExam.daysUntil).class}`}>
+                                            {getUrgencyBadge(selectedExam.daysUntil).text}
+                                        </span>
+                                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-white/50">
+                                            {selectedExam.semester}
+                                        </span>
+                                    </div>
+                                    <h3 className="font-bold text-lg">{selectedExam.title}</h3>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedExam(null)}
+                                    className="p-2 hover:bg-white/30 rounded-lg transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-5 space-y-4">
+                            {/* Countdown */}
+                            <div className="text-center p-4 bg-slate-50 rounded-xl">
+                                <p className="text-5xl font-bold text-slate-800">J-{selectedExam.daysUntil}</p>
+                                <p className="text-sm text-slate-500 mt-1">jours restants</p>
+                            </div>
+
+                            {/* Date et heure */}
+                            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                    <Calendar className="w-5 h-5 text-indigo-600" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-slate-800">
+                                        {new Date(selectedExam.start).toLocaleDateString('fr-FR', {
+                                            weekday: 'long',
+                                            day: 'numeric',
+                                            month: 'long',
+                                            year: 'numeric'
+                                        })}
+                                    </p>
+                                    <p className="text-sm text-slate-500 flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        {new Date(selectedExam.start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                        {' - '}
+                                        {new Date(selectedExam.end).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Durée */}
+                            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                                    <Clock className="w-5 h-5 text-amber-600" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-slate-800">Durée de l'épreuve</p>
+                                    <p className="text-sm text-slate-500">
+                                        {Math.round((new Date(selectedExam.end) - new Date(selectedExam.start)) / (1000 * 60))} minutes
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Lieu */}
+                            {selectedExam.location && (
+                                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                        <MapPin className="w-5 h-5 text-emerald-600" />
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-slate-800">Lieu</p>
+                                        <p className="text-sm text-slate-500">{selectedExam.location}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

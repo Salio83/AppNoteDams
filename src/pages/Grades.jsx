@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Trash2, AlertCircle, GraduationCap, Plus, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { Trash2, AlertCircle, GraduationCap, Plus, ChevronDown, ChevronRight, Loader2, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { getUEColor, getCategoryShortName } from '../utils/colors';
@@ -14,6 +14,7 @@ const Grades = () => {
     const [expandedCategories, setExpandedCategories] = useState({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState(null);
 
     // Charger les notes depuis Supabase
     useEffect(() => {
@@ -152,13 +153,6 @@ const Grades = () => {
         }
     };
 
-    const toggleCategory = (category) => {
-        setExpandedCategories(prev => ({
-            ...prev,
-            [category]: !prev[category]
-        }));
-    };
-
     const getUEName = (id) => ues.find(ue => ue.id === id)?.nom || 'Inconnu';
 
     return (
@@ -168,7 +162,7 @@ const Grades = () => {
                     <GraduationCap className="w-6 h-6 text-indigo-500" />
                     Gestion des Notes
                 </h2>
-                <p className="text-gray-500">Ajoutez et consultez vos résultats par matière</p>
+                <p className="text-gray-500">Appuyez sur une UE pour voir le détail des matières</p>
             </header>
 
 
@@ -251,11 +245,10 @@ const Grades = () => {
                     <p className="text-slate-500 text-sm mt-1">Commencez par ajouter une nouvelle note ci-dessus.</p>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {Object.entries(groupedUEs).map(([category, categoryUEs]) => {
                         const colors = getUEColor(category);
                         const hasGrades = categoryUEs.some(ue => gradesByUE[ue.id]?.length > 0);
-                        const isExpanded = expandedCategories[category];
 
                         // Calculer la moyenne de la catégorie
                         let categoryTotal = 0;
@@ -268,89 +261,136 @@ const Grades = () => {
                             }
                         });
                         const categoryAverage = categoryCoef > 0 ? categoryTotal / categoryCoef : null;
+                        const gradesCount = categoryUEs.reduce((sum, ue) => sum + (gradesByUE[ue.id]?.length || 0), 0);
 
                         return (
-                            <div key={category} className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-                                {/* Header de catégorie */}
-                                <button
-                                    onClick={() => toggleCategory(category)}
-                                    className={`w-full flex items-center justify-between p-4 ${colors.bg} border-b ${colors.border} hover:opacity-90 transition-opacity`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        {isExpanded ? (
-                                            <ChevronDown className={`w-5 h-5 ${colors.text}`} />
-                                        ) : (
-                                            <ChevronRight className={`w-5 h-5 ${colors.text}`} />
-                                        )}
-                                        <h3 className={`font-semibold ${colors.text}`}>
-                                            {getCategoryShortName(category)}
-                                        </h3>
-                                        {hasGrades && (
-                                            <span className={`text-xs px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}>
-                                                {categoryUEs.reduce((sum, ue) => sum + (gradesByUE[ue.id]?.length || 0), 0)} notes
-                                            </span>
-                                        )}
-                                    </div>
+                            <div
+                                key={category}
+                                onClick={() => setSelectedCategory({ category, categoryUEs, colors, categoryAverage })}
+                                className={`${colors.bg} border ${colors.border} rounded-xl p-4 cursor-pointer hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all`}
+                            >
+                                <div className="flex items-start justify-between mb-3">
+                                    <h3 className={`font-bold text-base ${colors.text}`}>
+                                        {getCategoryShortName(category)}
+                                    </h3>
                                     {categoryAverage !== null && (
-                                        <span className={`text-lg font-bold ${categoryAverage >= 10 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                            {categoryAverage.toFixed(2)}/20
+                                        <span className={`text-xl font-bold ${categoryAverage >= 10 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                            {categoryAverage.toFixed(1)}
                                         </span>
                                     )}
-                                </button>
+                                </div>
 
-                                {/* Contenu de la catégorie */}
-                                {isExpanded && (
-                                    <div className="divide-y divide-slate-100">
-                                        {categoryUEs.map(ue => {
-                                            const ueGrades = gradesByUE[ue.id] || [];
-                                            const ueAverage = calculateUEAverage(ue.id);
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className={`${colors.text} opacity-70`}>
+                                        {categoryUEs.length} matière{categoryUEs.length > 1 ? 's' : ''}
+                                    </span>
+                                    {hasGrades && (
+                                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors.bg} ${colors.text} border ${colors.border}`}>
+                                            {gradesCount} note{gradesCount > 1 ? 's' : ''}
+                                        </span>
+                                    )}
+                                </div>
 
-                                            return (
-                                                <div key={ue.id} className="p-4">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="font-medium text-slate-800">{ue.nom}</span>
-                                                            <span className="text-xs text-slate-400">(Coef {ue.coef_ue})</span>
-                                                        </div>
-                                                        {ueAverage !== null && (
-                                                            <span className={`text-sm font-bold px-2 py-1 rounded-lg ${ueAverage >= 10 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                                                                Moyenne: {ueAverage.toFixed(2)}/20
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    {ueGrades.length > 0 ? (
-                                                        <div className="flex flex-wrap gap-2 mt-2">
-                                                            {ueGrades.map(g => (
-                                                                <div
-                                                                    key={g.id}
-                                                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${g.value >= 10 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'} group`}
-                                                                >
-                                                                    <span className={`font-bold ${g.value >= 10 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                                                                        {g.value}/20
-                                                                    </span>
-                                                                    <span className="text-xs text-slate-500">×{g.coef}</span>
-                                                                    <button
-                                                                        onClick={() => handleDelete(g.id)}
-                                                                        className="p-1 text-slate-300 hover:text-rose-500 hover:bg-rose-100 rounded transition-all opacity-0 group-hover:opacity-100"
-                                                                        title="Supprimer"
-                                                                    >
-                                                                        <Trash2 className="w-3 h-3" />
-                                                                    </button>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <p className="text-xs text-slate-400 mt-1">Aucune note</p>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                                <div className="mt-3 pt-3 border-t border-current/10 text-xs opacity-60 text-center">
+                                    Appuyez pour voir les détails →
+                                </div>
                             </div>
                         );
                     })}
+                </div>
+            )}
+
+            {/* Category Detail Modal */}
+            {selectedCategory && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn"
+                    onClick={() => setSelectedCategory(null)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-hidden animate-slideUp"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className={`p-4 ${selectedCategory.colors.bg} ${selectedCategory.colors.border} border-b`}>
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <h3 className={`font-bold text-lg ${selectedCategory.colors.text}`}>
+                                        {getCategoryShortName(selectedCategory.category)}
+                                    </h3>
+                                    <p className={`text-sm opacity-80 ${selectedCategory.colors.text}`}>
+                                        {selectedCategory.categoryUEs.length} matières
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    {selectedCategory.categoryAverage !== null && (
+                                        <span className={`text-2xl font-bold ${selectedCategory.categoryAverage >= 10 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                            {selectedCategory.categoryAverage.toFixed(2)}
+                                        </span>
+                                    )}
+                                    <button
+                                        onClick={() => setSelectedCategory(null)}
+                                        className="p-2 hover:bg-white/30 rounded-lg transition-colors"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Content - List of subjects */}
+                        <div className="p-4 overflow-y-auto max-h-[calc(85vh-80px)] space-y-3">
+                            {selectedCategory.categoryUEs.map(ue => {
+                                const ueGrades = gradesByUE[ue.id] || [];
+                                const ueAverage = calculateUEAverage(ue.id);
+
+                                return (
+                                    <div key={ue.id} className="bg-slate-50 rounded-xl p-4">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium text-slate-800">{ue.nom}</span>
+                                                <span className="text-xs text-slate-400 px-1.5 py-0.5 bg-slate-200 rounded">
+                                                    Coef {ue.coef_ue}
+                                                </span>
+                                            </div>
+                                            {ueAverage !== null && (
+                                                <span className={`text-sm font-bold px-2 py-1 rounded-lg ${ueAverage >= 10 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                                    {ueAverage.toFixed(2)}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {ueGrades.length > 0 ? (
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {ueGrades.map(g => (
+                                                    <div
+                                                        key={g.id}
+                                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${g.value >= 10 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'} group`}
+                                                    >
+                                                        <span className={`font-bold ${g.value >= 10 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                                                            {g.value}/20
+                                                        </span>
+                                                        <span className="text-xs text-slate-500">×{g.coef}</span>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDelete(g.id);
+                                                            }}
+                                                            className="p-1 text-slate-300 hover:text-rose-500 hover:bg-rose-100 rounded transition-all"
+                                                            title="Supprimer"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-slate-400 mt-1">Aucune note</p>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

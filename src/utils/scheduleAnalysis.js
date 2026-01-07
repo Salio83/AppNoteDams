@@ -26,7 +26,9 @@ export const isExamEvent = (event) => {
         /amphi/i,
         /controle/i,
         /épreuve/i,
-        /partiel/i
+        /partiel/i,
+        /soutenance/i,
+        /Soutenance/i
     ];
 
     return examPatterns.some(pattern => pattern.test(text));
