@@ -3,7 +3,7 @@ import ICAL from 'ical.js';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 import { getEventColor } from '../utils/colors';
 
-const WEEK_DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+const WEEK_DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
 const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 08:00 to 20:00
 
 const Schedule = () => {
@@ -106,6 +106,49 @@ const Schedule = () => {
 
     const currentWeekEvents = events.filter(e => e.start >= weekStart && e.end <= weekEnd);
 
+    // Détection des chevauchements entre événements
+    const eventsOverlap = (a, b) => {
+        return a.start < b.end && a.end > b.start;
+    };
+
+    // Calcule les colonnes pour les événements qui se chevauchent
+    const calculateEventColumns = (events) => {
+        if (events.length === 0) return [];
+
+        // Trier par heure de début
+        const sorted = [...events].sort((a, b) => a.start - b.start);
+        const result = sorted.map(e => ({ ...e, column: 0, totalColumns: 1 }));
+
+        // Trouver les groupes d'événements qui se chevauchent
+        for (let i = 0; i < result.length; i++) {
+            // Trouver tous les événements qui chevauchent l'événement actuel
+            const overlapping = result.filter((e, j) => j !== i && eventsOverlap(result[i], e));
+
+            if (overlapping.length > 0) {
+                // Collecter toutes les colonnes utilisées par les événements chevauchants
+                const usedColumns = overlapping.map(e => e.column);
+
+                // Trouver la première colonne disponible
+                let col = 0;
+                while (usedColumns.includes(col)) {
+                    col++;
+                }
+                result[i].column = col;
+            }
+        }
+
+        // Calculer le nombre total de colonnes pour chaque groupe
+        for (let i = 0; i < result.length; i++) {
+            const overlapping = result.filter(e => eventsOverlap(result[i], e));
+            const maxColumn = Math.max(...overlapping.map(e => e.column)) + 1;
+            overlapping.forEach(e => {
+                e.totalColumns = Math.max(e.totalColumns, maxColumn);
+            });
+        }
+
+        return result;
+    };
+
     // Group events by day index (0 = Mon, 6 = Sun)
     const eventsByDay = Array.from({ length: 7 }, () => []);
     currentWeekEvents.forEach(e => {
@@ -116,8 +159,11 @@ const Schedule = () => {
         }
     });
 
+    // Appliquer le calcul des colonnes à chaque jour
+    const processedEventsByDay = eventsByDay.map(dayEvents => calculateEventColumns(dayEvents));
+
     return (
-        <div className="space-y-6 h-[calc(100vh-8rem)] flex flex-col">
+        <div className="space-y-4 h-[calc(100vh-6rem)] flex flex-col">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 shrink-0">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">Emploi du temps</h2>
@@ -165,7 +211,7 @@ const Schedule = () => {
 
             {/* Schedule Grid */}
             <div className="flex-1 overflow-auto bg-white rounded-2xl shadow-sm border border-slate-200/60 min-h-0">
-                <div className="grid grid-cols-[auto_repeat(7,1fr)] min-w-[800px]">
+                <div className="grid grid-cols-[auto_repeat(5,1fr)] min-w-[700px]">
                     {/* Header Row */}
                     <div className="border-b border-slate-100 p-2 bg-slate-50 sticky top-0 z-10"></div>
                     {WEEK_DAYS.map((day, index) => {
@@ -186,22 +232,42 @@ const Schedule = () => {
                     {/* Time Slots */}
                     {HOURS.map(hour => (
                         <React.Fragment key={hour}>
-                            <div className="border-b border-slate-100 p-2 text-xs text-slate-400 text-right h-20 -mt-2.5">
+                            <div className="border-b border-slate-100 p-1 text-[10px] text-slate-400 text-right h-12 -mt-2">
                                 {hour}:00
                             </div>
-                            {Array.from({ length: 7 }).map((_, dayIndex) => {
+                            {Array.from({ length: 5 }).map((_, dayIndex) => {
+                                // Trouver les événements qui commencent dans cette heure
+                                const hourEvents = processedEventsByDay[dayIndex].filter(e => e.start.getHours() === hour);
+
                                 return (
-                                    <div key={dayIndex} className="border-b border-l border-slate-100 h-20 relative bg-slate-50/10 hover:bg-slate-50/30 transition-colors">
-                                        {eventsByDay[dayIndex].filter(e => e.start.getHours() === hour).map((evt, idx) => {
+                                    <div key={dayIndex} className="border-b border-l border-slate-100 h-12 relative bg-slate-50/10 hover:bg-slate-50/30 transition-colors">
+                                        {hourEvents.map((evt, idx) => {
                                             const colors = getEventColor(evt.title);
+
+                                            // Calculer le décalage vertical basé sur les minutes
+                                            const startMinutes = evt.start.getMinutes();
+                                            const topOffset = (startMinutes / 60) * 100; // en pourcentage de la cellule d'heure
+
+                                            // Calculer la largeur et position horizontale basées sur les colonnes
+                                            const width = 100 / evt.totalColumns;
+                                            const left = evt.column * width;
+
+                                            // Calculer la hauteur basée sur la durée
+                                            const durationHours = (evt.end - evt.start) / (1000 * 60 * 60);
+                                            const height = durationHours * 100; // en pourcentage (100% = 1 heure)
+
                                             return (
                                                 <div
                                                     key={idx}
-                                                    className={`absolute top-1 left-1 right-1 bottom-1 ${colors.bg} border ${colors.border} ${colors.text} rounded-lg p-1.5 text-xs overflow-hidden hover:z-20 hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer group flex flex-col z-0`}
+                                                    className={`absolute ${colors.bg} border ${colors.border} ${colors.text} rounded-lg p-1.5 text-xs overflow-hidden hover:z-20 hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer group flex flex-col`}
                                                     title={`${evt.title}\n${evt.location}`}
                                                     style={{
-                                                        height: `calc(${(evt.end - evt.start) / (1000 * 60 * 60) * 100}% - 4px)`,
-                                                        minHeight: '2rem'
+                                                        top: `calc(${topOffset}% + 2px)`,
+                                                        left: `calc(${left}% + 2px)`,
+                                                        width: `calc(${width}% - 4px)`,
+                                                        height: `calc(${height}% - 4px)`,
+                                                        minHeight: '2rem',
+                                                        zIndex: 1
                                                     }}
                                                 >
                                                     <div className="font-bold truncate group-hover:whitespace-normal leading-tight mb-0.5">{evt.title}</div>
