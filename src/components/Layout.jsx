@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, GraduationCap, Calendar, UserCircle, BookOpen, AlertTriangle, Clock, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, Calendar, UserCircle, BookOpen, AlertTriangle, Clock, LogOut, Menu, X, ClipboardList, CalendarDays } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../context/AuthContext';
 
@@ -90,6 +90,8 @@ const Layout = ({ children }) => {
                     <SidebarItem to="/averages" icon={BookOpen} label="Moyennes" onClick={closeSidebar} />
                     <SidebarItem to="/exams" icon={AlertTriangle} label="Examens" onClick={closeSidebar} />
                     <SidebarItem to="/hours" icon={Clock} label="Heures restantes" onClick={closeSidebar} />
+                    <SidebarItem to="/tasks" icon={ClipboardList} label="Mes Tâches" onClick={closeSidebar} />
+                    <SidebarItem to="/calendar" icon={CalendarDays} label="Calendrier" onClick={closeSidebar} />
                 </nav>
 
 

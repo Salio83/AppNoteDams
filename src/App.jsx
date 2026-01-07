@@ -7,8 +7,11 @@ import Schedule from './pages/Schedule';
 import Averages from './pages/Averages';
 import Exams from './pages/Exams';
 import RemainingHours from './pages/RemainingHours';
+import Tasks from './pages/Tasks';
+import Calendar from './pages/Calendar';
 import Login from './pages/Login';
 import { ScheduleProvider } from './context/ScheduleContext';
+import { TasksProvider } from './context/TasksContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Composant pour protéger les routes
@@ -38,17 +41,21 @@ function AppContent() {
                 <Route path="/*" element={
                     <ProtectedRoute>
                         <ScheduleProvider>
-                            <Layout>
-                                <Routes>
-                                    <Route path="/" element={<Schedule />} />
-                                    <Route path="/dashboard" element={<Dashboard />} />
-                                    <Route path="/grades" element={<Grades />} />
-                                    <Route path="/averages" element={<Averages />} />
-                                    <Route path="/exams" element={<Exams />} />
-                                    <Route path="/hours" element={<RemainingHours />} />
-                                    <Route path="*" element={<Navigate to="/" replace />} />
-                                </Routes>
-                            </Layout>
+                            <TasksProvider>
+                                <Layout>
+                                    <Routes>
+                                        <Route path="/" element={<Schedule />} />
+                                        <Route path="/dashboard" element={<Dashboard />} />
+                                        <Route path="/grades" element={<Grades />} />
+                                        <Route path="/averages" element={<Averages />} />
+                                        <Route path="/exams" element={<Exams />} />
+                                        <Route path="/hours" element={<RemainingHours />} />
+                                        <Route path="/tasks" element={<Tasks />} />
+                                        <Route path="/calendar" element={<Calendar />} />
+                                        <Route path="*" element={<Navigate to="/" replace />} />
+                                    </Routes>
+                                </Layout>
+                            </TasksProvider>
                         </ScheduleProvider>
                     </ProtectedRoute>
                 } />

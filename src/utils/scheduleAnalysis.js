@@ -17,18 +17,28 @@ export const isExamEvent = (event) => {
         event.description || ''
     ].join(' ').toLowerCase();
 
-    // Patterns pour détecter un examen
+    // Exclusions : matières dont le nom contient des mots-clés d'examen
+    const exclusions = [
+        /controle de gestion/i,
+        /contrôle de gestion/i
+    ];
+
+    // Si c'est une exclusion, ce n'est pas un examen
+    if (exclusions.some(pattern => pattern.test(text))) {
+        return false;
+    }
+
+    // Patterns pour détecter un examen (mots-clés clairs uniquement)
     const examPatterns = [
-        /examen/i,
-        /\bds\b/i,           // "ds" comme mot complet
-        /\bds\s/i,           // "ds " suivi d'espace
-        /^ds/i,              // commence par "ds"
-        /amphi/i,
-        /controle/i,
+        /\bexam\b/i,          // "exam" comme mot complet (Optim science données Exam)
+        /examen/i,            // examen, Examen, EXAMEN
+        /\bds\b/i,            // "ds" comme mot complet
+        /\bds\d/i,            // ds1, ds2, etc
+        /ds\s+\w/i,           // "ds " suivi de texte
         /épreuve/i,
+        /epreuve/i,           // sans accent
         /partiel/i,
-        /soutenance/i,
-        /Soutenance/i
+        /soutenance/i
     ];
 
     return examPatterns.some(pattern => pattern.test(text));

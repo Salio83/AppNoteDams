@@ -4,7 +4,6 @@ import { useSchedule } from '../context/ScheduleContext';
 
 const Exams = () => {
     const { exams, loading, error, lastUpdated, refreshData, getCacheAge } = useSchedule();
-    const [filter, setFilter] = useState('all'); // 'all', 'S1', 'S2'
     const [selectedExam, setSelectedExam] = useState(null);
 
     // Charger les données au premier rendu si pas encore chargées
@@ -28,12 +27,8 @@ const Exams = () => {
         return { text: 'À venir', class: 'bg-emerald-500' };
     };
 
-    const filteredExams = filter === 'all'
-        ? exams
-        : exams.filter(e => e.semester === filter);
-
-    const s1Count = exams.filter(e => e.semester === 'S1').length;
-    const s2Count = exams.filter(e => e.semester === 'S2').length;
+    // Tous les examens triés chronologiquement
+    const sortedExams = [...exams].sort((a, b) => new Date(a.start) - new Date(b.start));
 
     return (
         <div className="space-y-6">
@@ -44,7 +39,7 @@ const Exams = () => {
                         Examens détectés
                     </h2>
                     <p className="text-gray-500 text-sm mt-1">
-                        Appuyez sur un examen pour voir les détails
+                        {exams.length} examen{exams.length > 1 ? 's' : ''} à venir • Appuyez pour voir les détails
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -65,36 +60,6 @@ const Exams = () => {
                 </div>
             </header>
 
-            {/* Filtres semestre */}
-            <div className="flex gap-2 flex-wrap">
-                <button
-                    onClick={() => setFilter('all')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all'
-                        ? 'bg-slate-900 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }`}
-                >
-                    Tous ({exams.length})
-                </button>
-                <button
-                    onClick={() => setFilter('S1')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'S1'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
-                        }`}
-                >
-                    Semestre 1 ({s1Count})
-                </button>
-                <button
-                    onClick={() => setFilter('S2')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'S2'
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
-                        }`}
-                >
-                    Semestre 2 ({s2Count})
-                </button>
-            </div>
 
             {error && (
                 <div className="bg-rose-50 text-rose-600 p-4 rounded-xl flex items-center gap-3 border border-rose-100">
@@ -107,19 +72,19 @@ const Exams = () => {
                 <div className="flex items-center justify-center py-12">
                     <RefreshCw className="w-8 h-8 animate-spin text-slate-400" />
                 </div>
-            ) : filteredExams.length === 0 ? (
+            ) : sortedExams.length === 0 ? (
                 <div className="bg-slate-50 rounded-2xl p-8 text-center">
                     <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-slate-700 mb-2">
                         Aucun examen détecté
                     </h3>
                     <p className="text-slate-500">
-                        Les examens sont détectés automatiquement via les mots-clés : examen, DS, amphi, contrôle, partiel
+                        Les examens sont détectés via : examen, DS, épreuve, partiel, soutenance
                     </p>
                 </div>
             ) : (
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                    {filteredExams.map((exam, index) => {
+                    {sortedExams.map((exam, index) => {
                         const urgency = getUrgencyBadge(exam.daysUntil);
                         return (
                             <div
