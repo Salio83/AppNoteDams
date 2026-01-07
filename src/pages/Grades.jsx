@@ -1,30 +1,63 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Trash2, AlertCircle, GraduationCap, Plus, ChevronDown, ChevronRight } from 'lucide-react';
-import { getStoredGrades, saveStoredGrades } from '../utils/storage';
+import { Trash2, AlertCircle, GraduationCap, Plus, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import { getUEColor, getCategoryShortName } from '../utils/colors';
 import ues from '../../config_ue.json';
 
 const Grades = () => {
+    const { user } = useAuth();
     const [grades, setGrades] = useState([]);
     const [selectedUE, setSelectedUE] = useState(ues[0]?.id || '');
     const [grade, setGrade] = useState('');
     const [coef, setCoef] = useState('1');
     const [expandedCategories, setExpandedCategories] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
+    // Charger les notes depuis Supabase
     useEffect(() => {
-        const stored = getStoredGrades();
-        setGrades(stored);
+        const loadGrades = async () => {
+            if (!user) return;
 
-        // Ouvrir automatiquement les catégories qui ont des notes
-        const categoriesWithGrades = new Set();
-        stored.forEach(g => {
-            const ue = ues.find(u => u.id === g.ue_id);
-            if (ue) categoriesWithGrades.add(ue.category);
-        });
-        const expanded = {};
-        categoriesWithGrades.forEach(cat => expanded[cat] = true);
-        setExpandedCategories(expanded);
-    }, []);
+            try {
+                const { data, error } = await supabase
+                    .from('grades')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                // Transformer les données pour correspondre au format attendu
+                const formattedGrades = data.map(g => ({
+                    id: g.id,
+                    ue_id: g.ue_id,
+                    value: parseFloat(g.value),
+                    coef: parseFloat(g.coef),
+                    date: g.created_at
+                }));
+
+                setGrades(formattedGrades);
+
+                // Ouvrir automatiquement les catégories qui ont des notes
+                const categoriesWithGrades = new Set();
+                formattedGrades.forEach(g => {
+                    const ue = ues.find(u => u.id === g.ue_id);
+                    if (ue) categoriesWithGrades.add(ue.category);
+                });
+                const expanded = {};
+                categoriesWithGrades.forEach(cat => expanded[cat] = true);
+                setExpandedCategories(expanded);
+            } catch (error) {
+                console.error('Erreur chargement notes:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadGrades();
+    }, [user]);
 
     // Grouper les UEs par catégorie
     const groupedUEs = useMemo(() => {
@@ -59,35 +92,64 @@ const Grades = () => {
         return totalCoef > 0 ? totalWeighted / totalCoef : null;
     };
 
-    const handleAddGrade = (e) => {
+    const handleAddGrade = async (e) => {
         e.preventDefault();
-        if (!selectedUE || grade === '' || coef === '') return;
+        if (!selectedUE || grade === '' || coef === '' || !user) return;
 
-        const newGrade = {
-            id: crypto.randomUUID(),
-            ue_id: parseInt(selectedUE),
-            value: parseFloat(grade),
-            coef: parseFloat(coef),
-            date: new Date().toISOString()
-        };
+        setSaving(true);
+        try {
+            const { data, error } = await supabase
+                .from('grades')
+                .insert({
+                    user_id: user.id,
+                    ue_id: parseInt(selectedUE),
+                    value: parseFloat(grade),
+                    coef: parseFloat(coef)
+                })
+                .select()
+                .single();
 
-        const newGrades = [newGrade, ...grades];
-        setGrades(newGrades);
-        saveStoredGrades(newGrades);
-        setGrade('');
-        setCoef('1');
+            if (error) throw error;
 
-        // Ouvrir la catégorie de l'UE ajoutée
-        const ue = ues.find(u => u.id === parseInt(selectedUE));
-        if (ue) {
-            setExpandedCategories(prev => ({ ...prev, [ue.category]: true }));
+            const newGrade = {
+                id: data.id,
+                ue_id: data.ue_id,
+                value: parseFloat(data.value),
+                coef: parseFloat(data.coef),
+                date: data.created_at
+            };
+
+            setGrades([newGrade, ...grades]);
+            setGrade('');
+            setCoef('1');
+
+            // Ouvrir la catégorie de l'UE ajoutée
+            const ue = ues.find(u => u.id === parseInt(selectedUE));
+            if (ue) {
+                setExpandedCategories(prev => ({ ...prev, [ue.category]: true }));
+            }
+        } catch (error) {
+            console.error('Erreur ajout note:', error);
+            alert('Erreur lors de l\'ajout de la note');
+        } finally {
+            setSaving(false);
         }
     };
 
-    const handleDelete = (id) => {
-        const newGrades = grades.filter(g => g.id !== id);
-        setGrades(newGrades);
-        saveStoredGrades(newGrades);
+    const handleDelete = async (id) => {
+        try {
+            const { error } = await supabase
+                .from('grades')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            setGrades(grades.filter(g => g.id !== id));
+        } catch (error) {
+            console.error('Erreur suppression:', error);
+            alert('Erreur lors de la suppression');
+        }
     };
 
     const toggleCategory = (category) => {
@@ -99,6 +161,69 @@ const Grades = () => {
 
     const getUEName = (id) => ues.find(ue => ue.id === id)?.nom || 'Inconnu';
 
+    // Migration depuis localStorage
+    const [localGrades, setLocalGrades] = useState([]);
+    const [migrating, setMigrating] = useState(false);
+
+    useEffect(() => {
+        // Vérifier s'il y a des notes dans localStorage
+        try {
+            const stored = localStorage.getItem('student_dashboard_grades');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    setLocalGrades(parsed);
+                }
+            }
+        } catch (e) {
+            console.error('Erreur lecture localStorage:', e);
+        }
+    }, []);
+
+    const handleMigration = async () => {
+        if (!user || localGrades.length === 0) return;
+
+        setMigrating(true);
+        try {
+            // Insérer toutes les notes en batch
+            const gradesToInsert = localGrades.map(g => ({
+                user_id: user.id,
+                ue_id: g.ue_id,
+                value: g.value,
+                coef: g.coef
+            }));
+
+            const { data, error } = await supabase
+                .from('grades')
+                .insert(gradesToInsert)
+                .select();
+
+            if (error) throw error;
+
+            // Mettre à jour l'état local
+            const formattedGrades = data.map(g => ({
+                id: g.id,
+                ue_id: g.ue_id,
+                value: parseFloat(g.value),
+                coef: parseFloat(g.coef),
+                date: g.created_at
+            }));
+
+            setGrades(prev => [...formattedGrades, ...prev]);
+
+            // Supprimer de localStorage
+            localStorage.removeItem('student_dashboard_grades');
+            setLocalGrades([]);
+
+            alert(`${data.length} notes migrées avec succès !`);
+        } catch (error) {
+            console.error('Erreur migration:', error);
+            alert('Erreur lors de la migration: ' + error.message);
+        } finally {
+            setMigrating(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <header>
@@ -108,6 +233,35 @@ const Grades = () => {
                 </h2>
                 <p className="text-gray-500">Ajoutez et consultez vos résultats par matière</p>
             </header>
+
+            {/* Bannière de migration */}
+            {localGrades.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                            <AlertCircle className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <div>
+                            <p className="font-semibold text-amber-800">
+                                {localGrades.length} notes trouvées en local
+                            </p>
+                            <p className="text-sm text-amber-600">
+                                Migrez-les vers votre compte pour les synchroniser
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleMigration}
+                        disabled={migrating}
+                        className="bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-amber-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                    >
+                        {migrating ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : null}
+                        {migrating ? 'Migration...' : 'Migrer les notes'}
+                    </button>
+                </div>
+            )}
 
             {/* Formulaire d'ajout */}
             <form onSubmit={handleAddGrade} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60">
@@ -160,16 +314,26 @@ const Grades = () => {
                 <div className="mt-4 flex justify-end">
                     <button
                         type="submit"
-                        className="bg-indigo-600 text-white rounded-lg px-6 py-2.5 hover:bg-indigo-700 transition-colors flex items-center gap-2 text-sm font-semibold shadow-sm"
+                        disabled={saving}
+                        className="bg-indigo-600 text-white rounded-lg px-6 py-2.5 hover:bg-indigo-700 transition-colors flex items-center gap-2 text-sm font-semibold shadow-sm disabled:opacity-50"
                     >
-                        <Plus className="w-4 h-4" />
-                        Ajouter la note
+                        {saving ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <Plus className="w-4 h-4" />
+                        )}
+                        {saving ? 'Ajout...' : 'Ajouter la note'}
                     </button>
                 </div>
             </form>
 
-            {/* Liste par catégorie */}
-            {grades.length === 0 ? (
+            {/* Loading state */}
+            {loading ? (
+                <div className="bg-white rounded-2xl p-12 text-center border border-slate-100">
+                    <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mx-auto" />
+                    <p className="text-slate-500 text-sm mt-4">Chargement des notes...</p>
+                </div>
+            ) : grades.length === 0 ? (
                 <div className="bg-white rounded-2xl p-12 text-center border border-slate-100 border-dashed">
                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                         <AlertCircle className="w-8 h-8 text-slate-300" />
