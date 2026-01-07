@@ -7,6 +7,41 @@
     @apply bg-slate-50 text-slate-800 antialiased;
     font-family: 'Inter', sans-serif;
   }
+  
+  /* Responsive font scaling */
+  html {
+    font-size: 16px;
+  }
+  
+  @media (max-width: 640px) {
+    html {
+      font-size: 14px;
+    }
+  }
+}
+
+@layer components {
+  /* Responsive card layouts */
+  .card-grid {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  
+  @media (max-width: 640px) {
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* Responsive tables */
+  .table-responsive {
+    @apply w-full overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .table-responsive table {
+    @apply min-w-full;
+  }
 }
 
 /* Scrollbar styling */
@@ -24,4 +59,23 @@
 
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-slate-300;
+}
+
+/* Mobile touch improvements */
+@media (max-width: 1024px) {
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+  
+  /* Prevent zoom on input focus on iOS */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Hide scrollbar on mobile for cleaner look */
+@media (max-width: 640px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
 }

@@ -163,7 +163,7 @@ const Schedule = () => {
     const processedEventsByDay = eventsByDay.map(dayEvents => calculateEventColumns(dayEvents));
 
     return (
-        <div className="space-y-4 h-[calc(100vh-6rem)] flex flex-col">
+        <div className="space-y-4 h-[calc(100vh-6rem)] lg:h-[calc(100vh-6rem)] flex flex-col">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 shrink-0">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">Emploi du temps</h2>
@@ -179,12 +179,12 @@ const Schedule = () => {
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                             </button>
                         </div>
-                        <p className="text-sm font-medium text-slate-500 capitalize">
+                        <p className="text-sm font-medium text-slate-500 capitalize hidden sm:block">
                             {weekStart.toLocaleDateString('fr-FR', { month: 'long', day: 'numeric' })} - {weekEnd.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
                         </p>
                     </div>
                 </div>
-                <div className="flex gap-2 items-center w-full max-w-sm">
+                <div className="flex gap-2 items-center w-full md:max-w-sm">
                     <input
                         type="text"
                         value={url}
@@ -209,9 +209,15 @@ const Schedule = () => {
                 </div>
             )}
 
-            {/* Schedule Grid */}
-            <div className="flex-1 overflow-auto bg-white rounded-2xl shadow-sm border border-slate-200/60 min-h-0">
-                <div className="grid grid-cols-[auto_repeat(5,1fr)] min-w-[700px]">
+            {/* Mobile Day View */}
+            <MobileDayView
+                weekStart={weekStart}
+                processedEventsByDay={processedEventsByDay}
+            />
+
+            {/* Desktop Week Grid */}
+            <div className="hidden lg:flex flex-1 overflow-auto bg-white rounded-2xl shadow-sm border border-slate-200/60 min-h-0">
+                <div className="grid grid-cols-[auto_repeat(5,1fr)] w-full">
                     {/* Header Row */}
                     <div className="border-b border-slate-100 p-2 bg-slate-50 sticky top-0 z-10"></div>
                     {WEEK_DAYS.map((day, index) => {
@@ -282,6 +288,105 @@ const Schedule = () => {
                         </React.Fragment>
                     ))}
                 </div>
+            </div>
+        </div>
+    );
+};
+
+// Mobile Day View Component
+const MobileDayView = ({ weekStart, processedEventsByDay }) => {
+    const [selectedDayIndex, setSelectedDayIndex] = useState(() => {
+        // Start with today if it's a weekday, otherwise Monday
+        const today = new Date().getDay();
+        return today >= 1 && today <= 5 ? today - 1 : 0;
+    });
+
+    const MOBILE_WEEK_DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'];
+
+    const getDayDate = (index) => {
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + index);
+        return date;
+    };
+
+    const dayEvents = processedEventsByDay[selectedDayIndex] || [];
+    const sortedEvents = [...dayEvents].sort((a, b) => a.start - b.start);
+
+    return (
+        <div className="lg:hidden flex-1 flex flex-col min-h-0">
+            {/* Day Selector Tabs */}
+            <div className="flex bg-slate-100 rounded-xl p-1 mb-3 shrink-0">
+                {MOBILE_WEEK_DAYS.map((day, index) => {
+                    const dayDate = getDayDate(index);
+                    const isToday = new Date().toDateString() === dayDate.toDateString();
+                    const isSelected = selectedDayIndex === index;
+                    const hasEvents = processedEventsByDay[index]?.length > 0;
+
+                    return (
+                        <button
+                            key={day}
+                            onClick={() => setSelectedDayIndex(index)}
+                            className={`flex-1 py-2 px-1 rounded-lg text-center transition-all relative ${isSelected
+                                    ? 'bg-white shadow-sm text-slate-900'
+                                    : isToday
+                                        ? 'text-blue-600'
+                                        : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                        >
+                            <div className={`text-xs font-semibold ${isSelected ? 'text-slate-900' : ''}`}>{day}</div>
+                            <div className={`text-lg font-bold ${isToday && !isSelected ? 'text-blue-600' : ''}`}>
+                                {dayDate.getDate()}
+                            </div>
+                            {hasEvents && (
+                                <div className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-indigo-500' : 'bg-slate-300'
+                                    }`} />
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Events List for Selected Day */}
+            <div className="flex-1 overflow-y-auto space-y-2 pb-4">
+                {sortedEvents.length === 0 ? (
+                    <div className="bg-white rounded-xl p-6 text-center border border-slate-200/60">
+                        <div className="text-slate-400 text-sm">Aucun cours ce jour</div>
+                    </div>
+                ) : (
+                    sortedEvents.map((evt, idx) => {
+                        const colors = getEventColor(evt.title);
+                        const startTime = evt.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                        const endTime = evt.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                        const durationMinutes = (evt.end - evt.start) / (1000 * 60);
+                        const durationHours = Math.floor(durationMinutes / 60);
+                        const durationMins = durationMinutes % 60;
+
+                        return (
+                            <div
+                                key={idx}
+                                className={`${colors.bg} border ${colors.border} rounded-xl p-4 ${colors.text}`}
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-bold text-base leading-snug mb-1">{evt.title}</h3>
+                                        {evt.location && (
+                                            <p className="text-sm opacity-80 mb-2">📍 {evt.location}</p>
+                                        )}
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <div className="font-semibold text-sm">{startTime}</div>
+                                        <div className="text-xs opacity-70">{endTime}</div>
+                                    </div>
+                                </div>
+                                <div className="mt-2 pt-2 border-t border-current/10 flex items-center justify-between text-xs opacity-70">
+                                    <span>
+                                        Durée: {durationHours > 0 ? `${durationHours}h` : ''}{durationMins > 0 ? `${durationMins}min` : ''}
+                                    </span>
+                                </div>
+                            </div>
+                        );
+                    })
+                )}
             </div>
         </div>
     );

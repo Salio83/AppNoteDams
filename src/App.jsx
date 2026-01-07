@@ -40,10 +40,10 @@ function AppContent() {
                         <ScheduleProvider>
                             <Layout>
                                 <Routes>
-                                    <Route path="/" element={<Dashboard />} />
+                                    <Route path="/" element={<Schedule />} />
+                                    <Route path="/dashboard" element={<Dashboard />} />
                                     <Route path="/grades" element={<Grades />} />
                                     <Route path="/averages" element={<Averages />} />
-                                    <Route path="/schedule" element={<Schedule />} />
                                     <Route path="/exams" element={<Exams />} />
                                     <Route path="/hours" element={<RemainingHours />} />
                                     <Route path="*" element={<Navigate to="/" replace />} />
