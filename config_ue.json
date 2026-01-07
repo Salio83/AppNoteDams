@@ -1,0 +1,140 @@
+[
+    {
+        "id": 101,
+        "category": "UE ENTREPRISE ET CULTURE PROFESSIONNELLE",
+        "nom": "Culture économique et sociétale",
+        "coef_ue": 2
+    },
+    {
+        "id": 102,
+        "category": "UE ENTREPRISE ET CULTURE PROFESSIONNELLE",
+        "nom": "Contreverses numériques",
+        "coef_ue": 1
+    },
+    {
+        "id": 103,
+        "category": "UE ENTREPRISE ET CULTURE PROFESSIONNELLE",
+        "nom": "Comptabilité des entreprises",
+        "coef_ue": 1.5
+    },
+    {
+        "id": 104,
+        "category": "UE ENTREPRISE ET CULTURE PROFESSIONNELLE",
+        "nom": "Langue et culture : Anglais 3A",
+        "coef_ue": 2
+    },
+    {
+        "id": 105,
+        "category": "UE ENTREPRISE ET CULTURE PROFESSIONNELLE",
+        "nom": "Techniques de gestion de projets informatiques",
+        "coef_ue": 1.5
+    },
+    {
+        "id": 201,
+        "category": "UE INTRODUCTION A LA PROGRAMMATION SYSTEME",
+        "nom": "Shell et ligne de commandes",
+        "coef_ue": 0.5
+    },
+    {
+        "id": 202,
+        "category": "UE INTRODUCTION A LA PROGRAMMATION SYSTEME",
+        "nom": "Projet semaine shell",
+        "coef_ue": 0.5
+    },
+    {
+        "id": 203,
+        "category": "UE INTRODUCTION A LA PROGRAMMATION SYSTEME",
+        "nom": "Introduction Systèmes d'exploitation",
+        "coef_ue": 0.5
+    },
+    {
+        "id": 204,
+        "category": "UE INTRODUCTION A LA PROGRAMMATION SYSTEME",
+        "nom": "Introduction à la programmation en C",
+        "coef_ue": 0.5
+    },
+    {
+        "id": 205,
+        "category": "UE INTRODUCTION A LA PROGRAMMATION SYSTEME",
+        "nom": "Programmation en C",
+        "coef_ue": 1
+    },
+    {
+        "id": 206,
+        "category": "UE INTRODUCTION A LA PROGRAMMATION SYSTEME",
+        "nom": "Projet C",
+        "coef_ue": 1.5
+    },
+    {
+        "id": 207,
+        "category": "UE INTRODUCTION A LA PROGRAMMATION SYSTEME",
+        "nom": "Programmation système",
+        "coef_ue": 2
+    },
+    {
+        "id": 301,
+        "category": "UE FONDEMENTS MATHEMATIQUES DE LA SCIENCE DES DONNEES",
+        "nom": "Optimisation pour la science des données",
+        "coef_ue": 2
+    },
+    {
+        "id": 302,
+        "category": "UE FONDEMENTS MATHEMATIQUES DE LA SCIENCE DES DONNEES",
+        "nom": "Bonnes pratiques de R et visualisation de données",
+        "coef_ue": 0.5
+    },
+    {
+        "id": 303,
+        "category": "UE FONDEMENTS MATHEMATIQUES DE LA SCIENCE DES DONNEES",
+        "nom": "Modélisation et statistiques",
+        "coef_ue": 2
+    },
+    {
+        "id": 304,
+        "category": "UE FONDEMENTS MATHEMATIQUES DE LA SCIENCE DES DONNEES",
+        "nom": "Intro IA",
+        "coef_ue": 0.5
+    },
+    {
+        "id": 305,
+        "category": "UE FONDEMENTS MATHEMATIQUES DE LA SCIENCE DES DONNEES",
+        "nom": "Maths Info",
+        "coef_ue": 2
+    },
+    {
+        "id": 401,
+        "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
+        "nom": "Outils collaboratifs Git",
+        "coef_ue": 0.5
+    },
+    {
+        "id": 402,
+        "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
+        "nom": "Fondamentaux Base de Données relationelles",
+        "coef_ue": 1
+    },
+    {
+        "id": 403,
+        "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
+        "nom": "Algorithmique, Structures de données et Types abstraits 1",
+        "coef_ue": 2.5
+    },
+    {
+        "id": 404,
+        "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
+        "nom": "Projet algorithmique & programmation",
+        "coef_ue": 2
+    },
+    {
+        "id": 405,
+        "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
+        "nom": "Analyse et conception des Systèmes d'information",
+        "coef_ue": 1.5
+    },
+    {
+        "id": 406,
+        "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
+        "nom": "Transition Ecologique & Développement Soutenable",
+        "coef_ue": 1
+    }
+]
