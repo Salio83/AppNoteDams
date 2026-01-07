@@ -1,14 +1,41 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getStoredGrades } from '../utils/storage';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import ues from '../../config_ue.json';
-import { BookOpen, Award, TrendingUp } from 'lucide-react';
+import { BookOpen, Award, TrendingUp, Loader2 } from 'lucide-react';
 
 const Averages = () => {
+    const { user } = useAuth();
     const [grades, setGrades] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        setGrades(getStoredGrades());
-    }, []);
+        const loadGrades = async () => {
+            if (!user) return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('grades')
+                    .select('*')
+                    .eq('user_id', user.id);
+
+                if (error) throw error;
+
+                setGrades(data.map(g => ({
+                    id: g.id,
+                    ue_id: g.ue_id,
+                    value: parseFloat(g.value),
+                    coef: parseFloat(g.coef)
+                })));
+            } catch (error) {
+                console.error('Erreur chargement:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadGrades();
+    }, [user]);
 
     const groupedData = useMemo(() => {
         // 1. Group UEs by category
@@ -90,7 +117,7 @@ const Averages = () => {
                             <div className="flex items-center gap-3">
                                 <span className="text-sm font-medium text-slate-400 uppercase tracking-wider">Moyenne UE</span>
                                 <span className={`text-xl font-bold px-3 py-1 rounded-lg ${group.ueAverage === null ? 'bg-slate-100 text-slate-400' :
-                                        group.ueAverage >= 10 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                                    group.ueAverage >= 10 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
                                     }`}>
                                     {group.ueAverage !== null ? group.ueAverage : '-'}
                                 </span>
@@ -123,7 +150,7 @@ const Averages = () => {
                                     <div className="flex items-center gap-4 sm:border-l sm:border-slate-100 sm:pl-6 shrink-0 min-w-[100px] justify-end">
                                         <div className="text-right">
                                             <div className={`text-lg font-bold ${subject.average === null ? 'text-slate-200' :
-                                                    subject.average >= 10 ? 'text-emerald-600' : 'text-rose-500'
+                                                subject.average >= 10 ? 'text-emerald-600' : 'text-rose-500'
                                                 }`}>
                                                 {subject.average !== null ? subject.average : '--'}
                                             </div>

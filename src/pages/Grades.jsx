@@ -161,69 +161,6 @@ const Grades = () => {
 
     const getUEName = (id) => ues.find(ue => ue.id === id)?.nom || 'Inconnu';
 
-    // Migration depuis localStorage
-    const [localGrades, setLocalGrades] = useState([]);
-    const [migrating, setMigrating] = useState(false);
-
-    useEffect(() => {
-        // Vérifier s'il y a des notes dans localStorage
-        try {
-            const stored = localStorage.getItem('student_dashboard_grades');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    setLocalGrades(parsed);
-                }
-            }
-        } catch (e) {
-            console.error('Erreur lecture localStorage:', e);
-        }
-    }, []);
-
-    const handleMigration = async () => {
-        if (!user || localGrades.length === 0) return;
-
-        setMigrating(true);
-        try {
-            // Insérer toutes les notes en batch
-            const gradesToInsert = localGrades.map(g => ({
-                user_id: user.id,
-                ue_id: g.ue_id,
-                value: g.value,
-                coef: g.coef
-            }));
-
-            const { data, error } = await supabase
-                .from('grades')
-                .insert(gradesToInsert)
-                .select();
-
-            if (error) throw error;
-
-            // Mettre à jour l'état local
-            const formattedGrades = data.map(g => ({
-                id: g.id,
-                ue_id: g.ue_id,
-                value: parseFloat(g.value),
-                coef: parseFloat(g.coef),
-                date: g.created_at
-            }));
-
-            setGrades(prev => [...formattedGrades, ...prev]);
-
-            // Supprimer de localStorage
-            localStorage.removeItem('student_dashboard_grades');
-            setLocalGrades([]);
-
-            alert(`${data.length} notes migrées avec succès !`);
-        } catch (error) {
-            console.error('Erreur migration:', error);
-            alert('Erreur lors de la migration: ' + error.message);
-        } finally {
-            setMigrating(false);
-        }
-    };
-
     return (
         <div className="space-y-6">
             <header>
@@ -234,34 +171,6 @@ const Grades = () => {
                 <p className="text-gray-500">Ajoutez et consultez vos résultats par matière</p>
             </header>
 
-            {/* Bannière de migration */}
-            {localGrades.length > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                            <AlertCircle className="w-5 h-5 text-amber-600" />
-                        </div>
-                        <div>
-                            <p className="font-semibold text-amber-800">
-                                {localGrades.length} notes trouvées en local
-                            </p>
-                            <p className="text-sm text-amber-600">
-                                Migrez-les vers votre compte pour les synchroniser
-                            </p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={handleMigration}
-                        disabled={migrating}
-                        className="bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-amber-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                    >
-                        {migrating ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : null}
-                        {migrating ? 'Migration...' : 'Migrer les notes'}
-                    </button>
-                </div>
-            )}
 
             {/* Formulaire d'ajout */}
             <form onSubmit={handleAddGrade} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60">

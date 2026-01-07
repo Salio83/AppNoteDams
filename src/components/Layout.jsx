@@ -2,7 +2,6 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, GraduationCap, Calendar, Settings, UserCircle, BookOpen, AlertTriangle, Clock, LogOut } from 'lucide-react';
 import clsx from 'clsx';
-import DataSync from './DataSync';
 import { useAuth } from '../context/AuthContext';
 
 const SidebarItem = ({ to, icon: Icon, label }) => (
@@ -56,7 +55,6 @@ const Layout = ({ children }) => {
                     <SidebarItem to="/hours" icon={Clock} label="Heures restantes" />
                 </nav>
 
-                <DataSync />
 
                 <div className="p-4 m-4 rounded-2xl bg-slate-50 border border-slate-100">
                     <div className="flex items-center gap-3">
