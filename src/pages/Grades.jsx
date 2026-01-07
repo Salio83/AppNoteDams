@@ -1,30 +1,63 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Trash2, AlertCircle, GraduationCap, Plus, ChevronDown, ChevronRight } from 'lucide-react';
-import { getStoredGrades, saveStoredGrades } from '../utils/storage';
+import { Trash2, AlertCircle, GraduationCap, Plus, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import { getUEColor, getCategoryShortName } from '../utils/colors';
 import ues from '../../config_ue.json';
 
 const Grades = () => {
+    const { user } = useAuth();
     const [grades, setGrades] = useState([]);
     const [selectedUE, setSelectedUE] = useState(ues[0]?.id || '');
     const [grade, setGrade] = useState('');
     const [coef, setCoef] = useState('1');
     const [expandedCategories, setExpandedCategories] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
+    // Charger les notes depuis Supabase
     useEffect(() => {
-        const stored = getStoredGrades();
-        setGrades(stored);
+        const loadGrades = async () => {
+            if (!user) return;
 
-        // Ouvrir automatiquement les catégories qui ont des notes
-        const categoriesWithGrades = new Set();
-        stored.forEach(g => {
-            const ue = ues.find(u => u.id === g.ue_id);
-            if (ue) categoriesWithGrades.add(ue.category);
-        });
-        const expanded = {};
-        categoriesWithGrades.forEach(cat => expanded[cat] = true);
-        setExpandedCategories(expanded);
-    }, []);
+            try {
+                const { data, error } = await supabase
+                    .from('grades')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                // Transformer les données pour correspondre au format attendu
+                const formattedGrades = data.map(g => ({
+                    id: g.id,
+                    ue_id: g.ue_id,
+                    value: parseFloat(g.value),
+                    coef: parseFloat(g.coef),
+                    date: g.created_at
+                }));
+
+                setGrades(formattedGrades);
+
+                // Ouvrir automatiquement les catégories qui ont des notes
+                const categoriesWithGrades = new Set();
+                formattedGrades.forEach(g => {
+                    const ue = ues.find(u => u.id === g.ue_id);
+                    if (ue) categoriesWithGrades.add(ue.category);
+                });
+                const expanded = {};
+                categoriesWithGrades.forEach(cat => expanded[cat] = true);
+                setExpandedCategories(expanded);
+            } catch (error) {
+                console.error('Erreur chargement notes:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadGrades();
+    }, [user]);
 
     // Grouper les UEs par catégorie
     const groupedUEs = useMemo(() => {
@@ -59,35 +92,64 @@ const Grades = () => {
         return totalCoef > 0 ? totalWeighted / totalCoef : null;
     };
 
-    const handleAddGrade = (e) => {
+    const handleAddGrade = async (e) => {
         e.preventDefault();
-        if (!selectedUE || grade === '' || coef === '') return;
+        if (!selectedUE || grade === '' || coef === '' || !user) return;
 
-        const newGrade = {
-            id: crypto.randomUUID(),
-            ue_id: parseInt(selectedUE),
-            value: parseFloat(grade),
-            coef: parseFloat(coef),
-            date: new Date().toISOString()
-        };
+        setSaving(true);
+        try {
+            const { data, error } = await supabase
+                .from('grades')
+                .insert({
+                    user_id: user.id,
+                    ue_id: parseInt(selectedUE),
+                    value: parseFloat(grade),
+                    coef: parseFloat(coef)
+                })
+                .select()
+                .single();
 
-        const newGrades = [newGrade, ...grades];
-        setGrades(newGrades);
-        saveStoredGrades(newGrades);
-        setGrade('');
-        setCoef('1');
+            if (error) throw error;
 
-        // Ouvrir la catégorie de l'UE ajoutée
-        const ue = ues.find(u => u.id === parseInt(selectedUE));
-        if (ue) {
-            setExpandedCategories(prev => ({ ...prev, [ue.category]: true }));
+            const newGrade = {
+                id: data.id,
+                ue_id: data.ue_id,
+                value: parseFloat(data.value),
+                coef: parseFloat(data.coef),
+                date: data.created_at
+            };
+
+            setGrades([newGrade, ...grades]);
+            setGrade('');
+            setCoef('1');
+
+            // Ouvrir la catégorie de l'UE ajoutée
+            const ue = ues.find(u => u.id === parseInt(selectedUE));
+            if (ue) {
+                setExpandedCategories(prev => ({ ...prev, [ue.category]: true }));
+            }
+        } catch (error) {
+            console.error('Erreur ajout note:', error);
+            alert('Erreur lors de l\'ajout de la note');
+        } finally {
+            setSaving(false);
         }
     };
 
-    const handleDelete = (id) => {
-        const newGrades = grades.filter(g => g.id !== id);
-        setGrades(newGrades);
-        saveStoredGrades(newGrades);
+    const handleDelete = async (id) => {
+        try {
+            const { error } = await supabase
+                .from('grades')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            setGrades(grades.filter(g => g.id !== id));
+        } catch (error) {
+            console.error('Erreur suppression:', error);
+            alert('Erreur lors de la suppression');
+        }
     };
 
     const toggleCategory = (category) => {
@@ -108,6 +170,7 @@ const Grades = () => {
                 </h2>
                 <p className="text-gray-500">Ajoutez et consultez vos résultats par matière</p>
             </header>
+
 
             {/* Formulaire d'ajout */}
             <form onSubmit={handleAddGrade} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60">
@@ -160,16 +223,26 @@ const Grades = () => {
                 <div className="mt-4 flex justify-end">
                     <button
                         type="submit"
-                        className="bg-indigo-600 text-white rounded-lg px-6 py-2.5 hover:bg-indigo-700 transition-colors flex items-center gap-2 text-sm font-semibold shadow-sm"
+                        disabled={saving}
+                        className="bg-indigo-600 text-white rounded-lg px-6 py-2.5 hover:bg-indigo-700 transition-colors flex items-center gap-2 text-sm font-semibold shadow-sm disabled:opacity-50"
                     >
-                        <Plus className="w-4 h-4" />
-                        Ajouter la note
+                        {saving ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <Plus className="w-4 h-4" />
+                        )}
+                        {saving ? 'Ajout...' : 'Ajouter la note'}
                     </button>
                 </div>
             </form>
 
-            {/* Liste par catégorie */}
-            {grades.length === 0 ? (
+            {/* Loading state */}
+            {loading ? (
+                <div className="bg-white rounded-2xl p-12 text-center border border-slate-100">
+                    <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mx-auto" />
+                    <p className="text-slate-500 text-sm mt-4">Chargement des notes...</p>
+                </div>
+            ) : grades.length === 0 ? (
                 <div className="bg-white rounded-2xl p-12 text-center border border-slate-100 border-dashed">
                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                         <AlertCircle className="w-8 h-8 text-slate-300" />

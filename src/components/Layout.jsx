@@ -1,8 +1,8 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, GraduationCap, Calendar, Settings, UserCircle, BookOpen, AlertTriangle, Clock } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, GraduationCap, Calendar, Settings, UserCircle, BookOpen, AlertTriangle, Clock, LogOut } from 'lucide-react';
 import clsx from 'clsx';
-import DataSync from './DataSync';
+import { useAuth } from '../context/AuthContext';
 
 const SidebarItem = ({ to, icon: Icon, label }) => (
     <NavLink
@@ -22,6 +22,14 @@ const SidebarItem = ({ to, icon: Icon, label }) => (
 );
 
 const Layout = ({ children }) => {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/login');
+    };
+
     return (
         <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
             {/* Sidebar */}
@@ -47,16 +55,26 @@ const Layout = ({ children }) => {
                     <SidebarItem to="/hours" icon={Clock} label="Heures restantes" />
                 </nav>
 
-                <DataSync />
 
-                <div className="p-4 m-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
-                        <UserCircle className="w-6 h-6" />
+                <div className="p-4 m-4 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                            <UserCircle className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-800 truncate">
+                                {user?.email?.split('@')[0] || 'Utilisateur'}
+                            </p>
+                            <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-sm font-semibold text-slate-800">Étudiant</p>
-                        <p className="text-xs text-slate-500">DaMS Monitor</p>
-                    </div>
+                    <button
+                        onClick={handleLogout}
+                        className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Déconnexion
+                    </button>
                 </div>
             </aside>
 
