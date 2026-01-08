@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import ICAL from 'ical.js';
-import { RefreshCw, AlertCircle } from 'lucide-react';
+import { RefreshCw, AlertCircle, CalendarDays, ClipboardList, Clock } from 'lucide-react';
 import { getEventColor } from '../utils/colors';
 
 const WEEK_DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
@@ -165,6 +166,22 @@ const Schedule = () => {
 
     return (
         <div className="space-y-4 h-[calc(100vh-6rem)] lg:h-[calc(100vh-6rem)] flex flex-col">
+            {/* Mobile Shortcuts */}
+            <div className="grid grid-cols-3 gap-3 md:hidden">
+                <Link to="/calendar" className="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors">
+                    <CalendarDays className="w-5 h-5 text-indigo-500 mb-1" />
+                    <span className="text-xs font-medium text-slate-700">Calendrier</span>
+                </Link>
+                <Link to="/tasks" className="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors">
+                    <ClipboardList className="w-5 h-5 text-emerald-500 mb-1" />
+                    <span className="text-xs font-medium text-slate-700">Tâches</span>
+                </Link>
+                <Link to="/hours" className="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors">
+                    <Clock className="w-5 h-5 text-amber-500 mb-1" />
+                    <span className="text-xs font-medium text-slate-700">Heures</span>
+                </Link>
+            </div>
+
             <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 shrink-0">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">Emploi du temps</h2>

@@ -43,8 +43,8 @@ const Layout = ({ children }) => {
                             </h1>
                         </div>
 
-                        {/* Navigation Items - Scrollable on mobile */}
-                        <div className="flex-1 flex items-center justify-center lg:justify-end gap-1 overflow-x-auto no-scrollbar py-2 mask-linear">
+                        {/* DESKTOP NAVIGATION - Hidden on Mobile */}
+                        <div className="hidden lg:flex flex-1 items-center justify-end gap-1">
                             <NavItem to="/" icon={Calendar} label="Emploi du Temps" />
                             <NavItem to="/dashboard" icon={LayoutDashboard} label="Aperçu" />
                             <NavItem to="/grades" icon={GraduationCap} label="Notes" />
@@ -52,31 +52,6 @@ const Layout = ({ children }) => {
                             <NavItem to="/exams" icon={AlertTriangle} label="Examens" />
                             <NavItem to="/hours" icon={Clock} label="Heures" />
                             <NavItem to="/tasks" icon={ClipboardList} label="Tâches" />
-                            {/* Calendar removed from nav as per request "cacher l'ICal" - actually user said "cache l'ICal" referring to the INPUT, but also mentioned "cacher l'ICal" in general. 
-                                Wait, user said "on verra uniquement des logos sur les versions responsives pour mobile".
-                                And "il faut aussi cacher l'ICal". 
-                                The user likely meant hiding the *page* or the *input*? 
-                                "on pourra le renseigner dans le profil" implies the INPUT.
-                                "il faut aussi cacher l'ICal" might mean the Calendar PAGE if it was just for showing holidays? 
-                                Let's assume hiding the Calendar PAGE link for now based on "cacher l'ICal". 
-                                Actually, checking standard interpretation: "ICal" usually refers to the link/input. 
-                                But there is a page called Calendar.jsx.
-                                "cacher l'ICal, on pourra le renseigner dans le profil". This strongly links "ICal" to "renseigner" (inputting data).
-                                So I should HIDE the input in Schedule (done later), 
-                                AND maybe hiding the "Calendar" page link? 
-                                Let's keep "Calendar" page if it's holidays/vacations ("Calendrier" in nav), but maybe user meant that too.
-                                Re-reading: "il faut aussi cacher l'ICal" -> likely the calendar view or the input.
-                                Given "on pourra le renseigner dans le profil", it 99% refers to the URL input.
-                                However, I see `CalendarDays` imported. I will keep it in the nav for now as "Calendrier" (vacations) unless "ICal" meant the calendar page.
-                                Actually, wait. "il faut aussi cacher l'ICal" followed by "on pourra le renseigner dans le profil". This sentence structure implies "The thing currently called ICal".
-                                Previously `Schedule.jsx` had `Calendar` import? No, `Layout.jsx` had `Calendar` (Emploi du Temps) and `CalendarDays` (Calendrier).
-                                The `Schedule` page IS the "Emploi du Temps".
-                                The `Calendar` page IS "vacations".
-                                The user probably means "The ICal URL Input".
-                                I will NOT remove the "Calendrier" (vacations) page link unless I am sure. 
-                                BUT, if I look at the previous prompt "Tasks and Calendar Features", the user asked for a "Calendar" tab.
-                                So I will keep "Calendrier" link.
-                            */}
                             <NavItem to="/calendar" icon={CalendarDays} label="Calendrier" />
                         </div>
 
@@ -99,8 +74,26 @@ const Layout = ({ children }) => {
                 </div>
             </nav>
 
+            {/* MOBILE BOTTOM NAVIGATION BAR */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-safe">
+                <div className="flex justify-around items-end h-16 px-2 pb-2">
+                    <NavLink to="/dashboard" className={({ isActive }) => clsx("flex flex-col items-center justify-center w-full pb-1 gap-1 transition-colors", isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-600")}><LayoutDashboard className="w-6 h-6" /><span className="text-[10px] font-medium">Aperçu</span></NavLink>
+                    <NavLink to="/grades" className={({ isActive }) => clsx("flex flex-col items-center justify-center w-full pb-1 gap-1 transition-colors", isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-600")}><GraduationCap className="w-6 h-6" /><span className="text-[10px] font-medium">Notes</span></NavLink>
+
+                    {/* Center Action Button - Planning */}
+                    <div className="relative -top-5 w-full flex justify-center pointer-events-none">
+                        <NavLink to="/" className={({ isActive }) => clsx("pointer-events-auto flex flex-col items-center justify-center w-14 h-14 rounded-full shadow-lg shadow-indigo-200 border-4 border-slate-50 transition-transform active:scale-95", isActive ? "bg-indigo-600 text-white" : "bg-indigo-500 text-white hover:bg-indigo-600")}>
+                            <Calendar className="w-7 h-7" />
+                        </NavLink>
+                    </div>
+
+                    <NavLink to="/exams" className={({ isActive }) => clsx("flex flex-col items-center justify-center w-full pb-1 gap-1 transition-colors", isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-600")}><AlertTriangle className="w-6 h-6" /><span className="text-[10px] font-medium">Examens</span></NavLink>
+                    <NavLink to="/averages" className={({ isActive }) => clsx("flex flex-col items-center justify-center w-full pb-1 gap-1 transition-colors", isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-600")}><BookOpen className="w-6 h-6" /><span className="text-[10px] font-medium">Moy</span></NavLink>
+                </div>
+            </div>
+
             {/* Main Content */}
-            <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8">
+            <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
                 {children}
             </main>
         </div>
