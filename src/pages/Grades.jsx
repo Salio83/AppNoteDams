@@ -1,12 +1,16 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Trash2, AlertCircle, GraduationCap, Plus, ChevronDown, ChevronRight, Loader2, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Trash2, AlertCircle, GraduationCap, Plus, ChevronDown, ChevronRight, Loader2, X, Calendar } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useSchedule } from '../context/ScheduleContext';
 import { getUEColor, getCategoryShortName } from '../utils/colors';
+import { getNextEventForSubject } from '../utils/scheduleAnalysis';
 import ues from '../../config_ue.json';
 
 const Grades = () => {
     const { user } = useAuth();
+    const { events: allEvents } = useSchedule();
     const [grades, setGrades] = useState([]);
     const [selectedUE, setSelectedUE] = useState(ues[0]?.id || '');
     const [grade, setGrade] = useState('');
@@ -342,15 +346,28 @@ const Grades = () => {
                             {selectedCategory.categoryUEs.map(ue => {
                                 const ueGrades = gradesByUE[ue.id] || [];
                                 const ueAverage = calculateUEAverage(ue.id);
+                                const nextEvent = getNextEventForSubject(ue, allEvents);
 
                                 return (
                                     <div key={ue.id} className="bg-slate-50 rounded-xl p-4">
                                         <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium text-slate-800">{ue.nom}</span>
-                                                <span className="text-xs text-slate-400 px-1.5 py-0.5 bg-slate-200 rounded">
-                                                    Coef {ue.coef_ue}
-                                                </span>
+                                            <div className="flex flex-col">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-slate-800">{ue.nom}</span>
+                                                    <span className="text-xs text-slate-400 px-1.5 py-0.5 bg-slate-200 rounded">
+                                                        Coef {ue.coef_ue}
+                                                    </span>
+                                                </div>
+                                                {/* Lien vers le prochain cours */}
+                                                {nextEvent && (
+                                                    <Link
+                                                        to={`/?date=${new Date(nextEvent.start).toISOString()}&eventId=${new Date(nextEvent.start).getTime()}`}
+                                                        className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium mt-1 w-fit"
+                                                    >
+                                                        <Calendar className="w-3 h-3" />
+                                                        Prochain cours: {new Date(nextEvent.start).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                                    </Link>
+                                                )}
                                             </div>
                                             {ueAverage !== null && (
                                                 <span className={`text-sm font-bold px-2 py-1 rounded-lg ${ueAverage >= 10 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>

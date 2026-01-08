@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import ICAL from 'ical.js';
 import { RefreshCw, AlertCircle, CalendarDays, ClipboardList, Clock } from 'lucide-react';
 import { getEventColor } from '../utils/colors';
@@ -8,12 +8,17 @@ const WEEK_DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
 const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 08:00 to 20:00
 
 const Schedule = () => {
+    const [searchParams] = useSearchParams();
     // Default URL pointing to the proxy path if needed, but user might paste full URL.
     const [url, setUrl] = useState(localStorage.getItem('schedule_url') || 'https://proseconsult.umontpellier.fr/jsp/custom/modules/plannings/direct_cal.jsp?data=58c99062bab31d256bee14356aca3f2423c0f022cb9660eba051b2653be722c4255dc57febc36bcda019d951db547ac9dc5c094f7d1a811b903031bde802c7f52fd380b992d3771de6139e0d9278c8e91aa43e5f4eeaa642fb89a601c5d38bdb242c572c6bf1cac3537c3eed8f7cb4820cecc4c4c9f5d60f651b1c48c2fe7b06,1');
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [currentDate, setCurrentDate] = useState(new Date());
+    const [currentDate, setCurrentDate] = useState(() => {
+        // Si une date est passée en paramètre, l'utiliser
+        const dateParam = searchParams.get('date');
+        return dateParam ? new Date(dateParam) : new Date();
+    });
     const [selectedEvent, setSelectedEvent] = useState(null);
 
     useEffect(() => {
@@ -21,6 +26,31 @@ const Schedule = () => {
             loadSchedule();
         }
     }, []); // Initial load only
+
+    // Gérer ouverture automatique d'événement via URL
+    useEffect(() => {
+        if (events.length > 0 && searchParams.get('eventId')) {
+            const eventId = searchParams.get('eventId');
+            // On cherche un événement qui commence à cette heure précise (le param eventId est un timestamp ou similaire)
+            // Ou on peut simplement passer le titre et la date
+            const targetDate = searchParams.get('date') ? new Date(searchParams.get('date')) : null;
+
+            if (targetDate) {
+                const match = events.find(e =>
+                    e.start.getTime() === targetDate.getTime()
+                );
+                if (match) {
+                    setSelectedEvent(match);
+
+                    // S'assurer que la vue est centrée sur cette semaine (déjà fait par le useState initial normalement, mais au cas où)
+                    const diff = match.start.getTime() - currentDate.getTime();
+                    if (Math.abs(diff) > 7 * 24 * 3600 * 1000) {
+                        setCurrentDate(new Date(match.start));
+                    }
+                }
+            }
+        }
+    }, [events, searchParams]);
 
     const loadSchedule = async () => {
         if (!url) return;

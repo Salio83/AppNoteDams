@@ -33,6 +33,10 @@
         "id": 105,
         "category": "UE ENTREPRISE ET CULTURE PROFESSIONNELLE",
         "nom": "Techniques de gestion de projets informatiques",
+        "aliases": [
+            "Gestion de projet",
+            "Gestion projet"
+        ],
         "coef_ue": 1.5
     },
     {
@@ -72,6 +76,9 @@
         "id": 206,
         "category": "UE INTRODUCTION A LA PROGRAMMATION SYSTEME",
         "nom": "Projet C",
+        "aliases": [
+            "Projet C"
+        ],
         "coef_ue": 1.5
     },
     {
@@ -145,6 +152,9 @@
         "id": 404,
         "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
         "nom": "Projet algorithmique & programmation",
+        "aliases": [
+            "Projet Algo"
+        ],
         "coef_ue": 2
     },
     {

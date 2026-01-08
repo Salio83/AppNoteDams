@@ -161,7 +161,44 @@ export const calculateHoursBySubject = (events, subjectsConfig, semester = 'all'
         }
     });
 
+    // Calculer le prochain événement pour chaque matière
+    Object.values(hoursBySubject).forEach(subject => {
+        if (subject.events.length > 0) {
+            const nextEvents = subject.events
+                .filter(e => new Date(e.start) > now)
+                .sort((a, b) => new Date(a.start) - new Date(b.start));
+            subject.nextEvent = nextEvents.length > 0 ? nextEvents[0] : null;
+        } else {
+            subject.nextEvent = null;
+        }
+    });
+
     return Object.values(hoursBySubject).filter(s => s.totalHours > 0);
+};
+
+/**
+ * Trouve le prochain cours pour une matière donnée (ou une liste de matières)
+ * @param {Object|Array} subjectConfOrList Configuration de la matière ou liste de configs
+ * @param {Array} events Liste de tous les événements
+ * @returns {Object|null} Le prochain événement ou null
+ */
+export const getNextEventForSubject = (subjectConfOrList, events) => {
+    if (!subjectConfOrList || !events || events.length === 0) return null;
+
+    const now = new Date();
+    // Filtrer les événements futurs
+    const futureEvents = events.filter(e => new Date(e.start) > now);
+    futureEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
+
+    const subjectList = Array.isArray(subjectConfOrList) ? subjectConfOrList : [subjectConfOrList];
+
+    for (const event of futureEvents) {
+        // Pour chaque événement futur, on regarde s'il correspond à une des matières de la liste
+        const match = findMatchingSubject(event.title, subjectList);
+        if (match) return event;
+    }
+
+    return null;
 };
 
 /**

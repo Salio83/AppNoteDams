@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, RefreshCw, BookOpen, CheckCircle, AlertCircle, Info, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Clock, RefreshCw, BookOpen, CheckCircle, AlertCircle, Info, X, Calendar } from 'lucide-react';
 import { useSchedule } from '../context/ScheduleContext';
 
 const RemainingHours = () => {
@@ -257,6 +258,17 @@ const RemainingHours = () => {
                                                     Reste: {subject.hoursRemaining.toFixed(1)}h
                                                 </span>
                                             </div>
+
+                                            {/* Bouton Prochain Cours */}
+                                            {subject.nextEvent && (
+                                                <Link
+                                                    to={`/?date=${new Date(subject.nextEvent.start).toISOString()}&eventId=${new Date(subject.nextEvent.start).getTime()}`}
+                                                    className="mt-2 flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 p-1.5 rounded-lg transition-colors w-full justify-center border border-indigo-100"
+                                                >
+                                                    <Calendar className="w-3.5 h-3.5" />
+                                                    Prochain cours: {new Date(subject.nextEvent.start).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                                </Link>
+                                            )}
                                         </div>
                                     );
                                 })}
