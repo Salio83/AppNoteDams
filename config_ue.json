@@ -3,6 +3,9 @@
         "id": 101,
         "category": "UE ENTREPRISE ET CULTURE PROFESSIONNELLE",
         "nom": "Culture économique et sociétale",
+        "aliases": [
+            "Culture éco"
+        ],
         "coef_ue": 2
     },
     {
@@ -21,6 +24,9 @@
         "id": 104,
         "category": "UE ENTREPRISE ET CULTURE PROFESSIONNELLE",
         "nom": "Langue et culture : Anglais 3A",
+        "aliases": [
+            "Anglais"
+        ],
         "coef_ue": 2
     },
     {
@@ -57,6 +63,9 @@
         "id": 205,
         "category": "UE INTRODUCTION A LA PROGRAMMATION SYSTEME",
         "nom": "Programmation en C",
+        "aliases": [
+            "Prog. C"
+        ],
         "coef_ue": 1
     },
     {
@@ -75,12 +84,18 @@
         "id": 301,
         "category": "UE FONDEMENTS MATHEMATIQUES DE LA SCIENCE DES DONNEES",
         "nom": "Optimisation pour la science des données",
+        "aliases": [
+            "Optim science données"
+        ],
         "coef_ue": 2
     },
     {
         "id": 302,
         "category": "UE FONDEMENTS MATHEMATIQUES DE LA SCIENCE DES DONNEES",
         "nom": "Bonnes pratiques de R et visualisation de données",
+        "aliases": [
+            "R et Data Viz"
+        ],
         "coef_ue": 0.5
     },
     {
@@ -111,12 +126,19 @@
         "id": 402,
         "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
         "nom": "Fondamentaux Base de Données relationelles",
+        "aliases": [
+            "Fondamentaux BD relat",
+            "BD relat"
+        ],
         "coef_ue": 1
     },
     {
         "id": 403,
         "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
         "nom": "Algorithmique, Structures de données et Types abstraits 1",
+        "aliases": [
+            "Algo.et Types abstrait"
+        ],
         "coef_ue": 2.5
     },
     {
@@ -129,12 +151,18 @@
         "id": 405,
         "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
         "nom": "Analyse et conception des Systèmes d'information",
+        "aliases": [
+            "ACSI"
+        ],
         "coef_ue": 1.5
     },
     {
         "id": 406,
         "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
         "nom": "Transition Ecologique & Développement Soutenable",
+        "aliases": [
+            "DDRS"
+        ],
         "coef_ue": 1
     },
     {

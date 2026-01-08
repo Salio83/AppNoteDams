@@ -73,21 +73,21 @@ export const getSemester = (date) => {
 /**
  * Calcule les heures par matière à partir des événements
  * @param {Array} events - Liste des événements
- * @param {Array} ues - Liste des UEs depuis config_ue.json
+ * @param {Array} subjectsConfig - Liste des matières depuis config_ue.json
  * @param {string} semester - "S1", "S2" ou "all"
  * @returns {Object} Heures par matière
  */
-export const calculateHoursBySubject = (events, ues, semester = 'all') => {
+export const calculateHoursBySubject = (events, subjectsConfig, semester = 'all') => {
     const now = new Date();
     const hoursBySubject = {};
     const { start: yearStart, end: yearEnd } = getAcademicYearDates();
 
-    // Initialiser toutes les UEs
-    ues.forEach(ue => {
-        hoursBySubject[ue.id] = {
-            id: ue.id,
-            nom: ue.nom,
-            category: ue.category,
+    // 1. Initialiser toutes les Matières configurées
+    subjectsConfig.forEach(subjectConf => {
+        hoursBySubject[subjectConf.id] = {
+            id: subjectConf.id,
+            nom: subjectConf.nom,
+            category: subjectConf.category, // Nom de l'UE
             hoursCompleted: 0,
             hoursRemaining: 0,
             totalHours: 0,
@@ -95,7 +95,10 @@ export const calculateHoursBySubject = (events, ues, semester = 'all') => {
         };
     });
 
-    // Parcourir les événements
+    // Liste des catégories (UEs) uniques pour le fallback
+    const uniqueCategories = [...new Set(subjectsConfig.map(s => s.category))];
+
+    // 2. Parcourir les événements
     events.forEach(event => {
         const eventStart = new Date(event.start);
 
@@ -110,21 +113,25 @@ export const calculateHoursBySubject = (events, ues, semester = 'all') => {
         // Calculer la durée en heures
         const duration = (new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
 
-        // Essayer de trouver l'UE correspondante
-        let matchedUE = findMatchingUE(event.title, ues);
-        let subjectId = matchedUE ? matchedUE.id : null;
+        // A. Essayer de trouver la matière correspondante
+        let matchedSubject = findMatchingSubject(event.title, subjectsConfig);
+        let subjectId = matchedSubject ? matchedSubject.id : null;
 
-        // Si pas de correspondance, on crée une "Matière détectée" dynamique
-        if (!matchedUE) {
-            // Nettoyer le titre pour grouper les événements similaires (ex: "TD Anglais" et "Anglais")
+        // B. Si pas de correspondance matière, on gère le cas "Non Classé"
+        if (!matchedSubject) {
+            // Nettoyer le titre pour créer un ID stable
             const cleanTitle = event.title.replace(/^(TD|TP|CM|Cours)\s+/i, '').trim();
             const dynamicId = `dynamic_${cleanTitle.toLowerCase().replace(/\s+/g, '_')}`;
 
+            // Si le sujet dynamique n'existe pas encore, on le crée
             if (!hoursBySubject[dynamicId]) {
+                // Tentative de deviner l'UE via le titre de l'événement
+                const guessedCategory = findMatchingCategory(event.title, uniqueCategories) || "AUTRES / NON CLASSÉ";
+
                 hoursBySubject[dynamicId] = {
                     id: dynamicId,
                     nom: cleanTitle || "Autre",
-                    category: "AUTRES / NON CLASSÉ", // Catégorie par défaut pour les non-reconnus
+                    category: guessedCategory,
                     hoursCompleted: 0,
                     hoursRemaining: 0,
                     totalHours: 0,
@@ -135,6 +142,7 @@ export const calculateHoursBySubject = (events, ues, semester = 'all') => {
             subjectId = dynamicId;
         }
 
+        // C. Ajouter les heures
         if (subjectId) {
             const subject = hoursBySubject[subjectId];
             subject.totalHours += duration;
@@ -157,39 +165,101 @@ export const calculateHoursBySubject = (events, ues, semester = 'all') => {
 };
 
 /**
- * Trouve l'UE correspondante à un titre d'événement
- * @param {string} title - Titre de l'événement
- * @param {Array} ues - Liste des UEs
- * @returns {Object|null} UE trouvée ou null
+ * Mots vides à ignorer lors du matching pour éviter les faux positifs
  */
-const findMatchingUE = (title, ues) => {
+const STOP_WORDS = ['cours', 'td', 'tp', 'cm', 'projet', 'introduction', 'fondamentaux', 'bases', 'technique', 'conf', 'conference', 'semaine', 'groupe'];
+
+/**
+ * Trouve la matière correspondante à un titre d'événement avec un système de scoring amélioré et alias
+ */
+const findMatchingSubject = (title, subjectsConfig) => {
     if (!title) return null;
 
     const normalizedTitle = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const titleWords = normalizedTitle.split(/\s+/).filter(w => w.length > 2);
 
-    // Chercher une correspondance dans les noms d'UE
-    for (const ue of ues) {
-        const normalizedUE = ue.nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    let bestMatch = null;
+    let maxScore = 0;
 
-        // 1. Correspondance exacte ou partielle directe
-        if (normalizedTitle.includes(normalizedUE) || normalizedUE.includes(normalizedTitle)) {
-            return ue;
+    for (const subjectConf of subjectsConfig) {
+        // 0. Vérification des Alias (Priorité absolue)
+        if (subjectConf.aliases && subjectConf.aliases.length > 0) {
+            for (const alias of subjectConf.aliases) {
+                const normalizedAlias = alias.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                // Correspondance exacte de l'alias dans le titre ?
+                if (normalizedTitle.includes(normalizedAlias)) {
+                    return subjectConf;
+                }
+            }
         }
 
-        // 2. Correspondance par mots-clés
-        const ueWords = normalizedUE.split(/\s+/).filter(w => w.length > 2); // Mots significatifs > 2 lettres
-        const titleWords = normalizedTitle.split(/\s+/).filter(w => w.length > 2);
+        const normalizedSubjectName = subjectConf.nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-        // Compter combien de mots de l'UE sont présents dans le titre
-        const matchCount = ueWords.filter(word => titleWords.some(t => t.includes(word))).length;
+        // 1. Correspondance exacte
+        if (normalizedTitle === normalizedSubjectName) return subjectConf;
 
-        // Critères assouplis :
-        // - Si l'UE a peu de mots (1-2), il faut qu'au moins 1 mot majeur corresponde (ex: "Anglais" dans "Langue Anglais")
-        // - Si l'UE a beaucoup de mots, il en faut au moins 2
-        if (ueWords.length <= 2 && matchCount >= 1) return ue;
-        if (ueWords.length > 2 && matchCount >= 2) return ue;
+        // 2. Inclusion directe (forte)
+        if (normalizedTitle.includes(normalizedSubjectName)) return subjectConf;
+
+        // 3. Scoring par mots-clés
+        const subjectWords = normalizedSubjectName.split(/\s+/).filter(w => w.length > 2);
+
+        // Filtrer les stop words pour le sujet
+        const significantSubjectWords = subjectWords.filter(w => !STOP_WORDS.includes(w));
+        const wordsToMatch = significantSubjectWords.length > 0 ? significantSubjectWords : subjectWords;
+
+        let matchCount = 0;
+        wordsToMatch.forEach(word => {
+            if (titleWords.some(t => t.includes(word))) {
+                matchCount++;
+            }
+        });
+
+        if (wordsToMatch.length === 0) continue;
+
+        const score = matchCount / wordsToMatch.length; // Pourcentage de mots du sujet trouvés
+
+        // Critères d'acceptation
+        if (score > maxScore) {
+            maxScore = score;
+            bestMatch = subjectConf;
+        }
     }
 
+    // Seuil de validation : au moins 50% des mots significatifs trouvés
+    if (bestMatch && maxScore >= 0.5) {
+        return bestMatch;
+    }
+
+    return null;
+};
+
+/**
+ * Tente de trouver une catégorie (UE) correspondante dans le titre
+ */
+const findMatchingCategory = (title, categories) => {
+    if (!title) return null;
+    const normalizedTitle = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    for (const category of categories) {
+        if (!category) continue;
+
+        // Enlever le préfixe "UE " pour la recherche
+        const cleanCategory = category.replace(/^UE\s+/, '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+        // Si le titre contient le nom de l'UE (ex: "Management")
+        if (normalizedTitle.includes(cleanCategory)) {
+            return category;
+        }
+
+        // Mots clés de la catégorie
+        const catWords = cleanCategory.split(/\s+/).filter(w => w.length > 3 && !STOP_WORDS.includes(w));
+        const matchCount = catWords.filter(w => normalizedTitle.includes(w)).length;
+
+        if (catWords.length > 0 && matchCount >= catWords.length * 0.75) {
+            return category;
+        }
+    }
     return null;
 };
 
