@@ -5,7 +5,7 @@ import { useSchedule } from '../context/ScheduleContext';
 const RemainingHours = () => {
     const { hoursBySubject, loading, error, lastUpdated, refreshData, getCacheAge } = useSchedule();
     const [semester, setSemester] = useState('S1'); // 'S1' ou 'S2'
-    const [selectedSubject, setSelectedSubject] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState(null);
 
     // Charger les données au premier rendu si pas encore chargées
     useEffect(() => {
@@ -13,17 +13,30 @@ const RemainingHours = () => {
         if (!hasData && !loading && !error) {
             refreshData();
         }
-    }, []);
+    }, [hoursBySubject, loading, error, refreshData]);
 
     const subjects = hoursBySubject[semester] || [];
 
-    // Grouper par catégorie
+    // Grouper par catégorie (UE)
     const groupedSubjects = subjects.reduce((acc, subject) => {
-        const cat = subject.category;
-        if (!acc[cat]) acc[cat] = [];
-        acc[cat].push(subject);
+        const cat = subject.category || "AUTRES / NON CLASSÉ";
+        if (!acc[cat]) {
+            acc[cat] = {
+                name: cat,
+                subjects: [],
+                hoursCompleted: 0,
+                hoursRemaining: 0,
+                totalHours: 0
+            };
+        }
+        acc[cat].subjects.push(subject);
+        acc[cat].hoursCompleted += subject.hoursCompleted;
+        acc[cat].hoursRemaining += subject.hoursRemaining;
+        acc[cat].totalHours += subject.totalHours;
         return acc;
     }, {});
+
+    const categories = Object.values(groupedSubjects).sort((a, b) => b.totalHours - a.totalHours);
 
     const totalCompleted = subjects.reduce((sum, s) => sum + s.hoursCompleted, 0);
     const totalRemaining = subjects.reduce((sum, s) => sum + s.hoursRemaining, 0);
@@ -38,7 +51,7 @@ const RemainingHours = () => {
                         Heures restantes
                     </h2>
                     <p className="text-gray-500 text-sm mt-1">
-                        Appuyez sur une matière pour voir les détails
+                        Appuyez sur une UE pour voir le détail par matière
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -69,7 +82,7 @@ const RemainingHours = () => {
                         }`}
                 >
                     <span className="text-lg">Semestre 1</span>
-                    <span className="block text-xs opacity-80">Jusqu'au 22 janvier</span>
+                    <span className="block text-xs opacity-80">Jusqu'au 27 janvier</span>
                 </button>
                 <button
                     onClick={() => setSemester('S2')}
@@ -79,7 +92,7 @@ const RemainingHours = () => {
                         }`}
                 >
                     <span className="text-lg">Semestre 2</span>
-                    <span className="block text-xs opacity-80">À partir du 23 janvier</span>
+                    <span className="block text-xs opacity-80">À partir du 28 janvier</span>
                 </button>
             </div>
 
@@ -119,7 +132,7 @@ const RemainingHours = () => {
                 <div className="flex items-center justify-center py-12">
                     <RefreshCw className="w-8 h-8 animate-spin text-slate-400" />
                 </div>
-            ) : subjects.length === 0 ? (
+            ) : categories.length === 0 ? (
                 <div className="bg-slate-50 rounded-2xl p-8 text-center">
                     <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-slate-700 mb-2">
@@ -130,39 +143,40 @@ const RemainingHours = () => {
                     </p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {subjects.map((subject) => {
-                        const progressPercent = subject.totalHours > 0
-                            ? (subject.hoursCompleted / subject.totalHours) * 100
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {categories.map((ue) => {
+                        const progressPercent = ue.totalHours > 0
+                            ? (ue.hoursCompleted / ue.totalHours) * 100
                             : 0;
 
                         return (
                             <div
-                                key={subject.id}
-                                onClick={() => setSelectedSubject(subject)}
-                                className="bg-white rounded-xl p-4 border border-slate-200/60 cursor-pointer hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all"
+                                key={ue.name}
+                                onClick={() => setSelectedCategory(ue)}
+                                className="bg-white rounded-xl p-5 border border-slate-200/60 cursor-pointer hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all group"
                             >
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="font-medium text-slate-800 truncate pr-2">{subject.nom}</span>
-                                    <span className="text-sm font-bold text-emerald-600 shrink-0">
-                                        {progressPercent.toFixed(0)}%
-                                    </span>
+                                <div className="flex flex-col gap-2 mb-3">
+                                    <h3 className="font-bold text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors">
+                                        {ue.name}
+                                    </h3>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-500">{ue.subjects.length} matières</span>
+                                        <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
+                                            {progressPercent.toFixed(0)}%
+                                        </span>
+                                    </div>
                                 </div>
 
-                                <div className="relative h-2 bg-slate-100 rounded-full overflow-hidden mb-2">
+                                <div className="relative h-2.5 bg-slate-100 rounded-full overflow-hidden mb-3">
                                     <div
                                         className="absolute left-0 top-0 h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-500"
                                         style={{ width: `${progressPercent}%` }}
                                     />
                                 </div>
 
-                                <div className="flex justify-between text-xs text-slate-400">
-                                    <span>{subject.hoursCompleted.toFixed(1)}h faites</span>
-                                    <span>{subject.hoursRemaining.toFixed(1)}h restantes</span>
-                                </div>
-
-                                <div className="mt-3 pt-2 border-t border-slate-100 text-xs text-slate-400 text-center">
-                                    Appuyez pour détails →
+                                <div className="flex justify-between text-xs font-medium text-slate-500">
+                                    <span>{ue.hoursCompleted.toFixed(1)}h faites</span>
+                                    <span>{ue.hoursRemaining.toFixed(1)}h restantes</span>
                                 </div>
                             </div>
                         );
@@ -170,75 +184,82 @@ const RemainingHours = () => {
                 </div>
             )}
 
-            {/* Subject Detail Modal */}
-            {selectedSubject && (
+            {/* UE Detail Modal */}
+            {selectedCategory && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn"
-                    onClick={() => setSelectedSubject(null)}
+                    onClick={() => setSelectedCategory(null)}
                 >
                     <div
-                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
+                        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col animate-slideUp"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="p-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
-                            <div className="flex items-start justify-between">
+                        <div className="p-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shrink-0">
+                            <div className="flex items-start justify-between gap-4">
                                 <div>
-                                    <h3 className="font-bold text-lg">{selectedSubject.nom}</h3>
-                                    <p className="text-sm opacity-80">{selectedSubject.category}</p>
+                                    <h3 className="font-bold text-xl leading-tight">{selectedCategory.name}</h3>
+                                    <div className="flex gap-4 mt-2 text-indigo-100 text-sm">
+                                        <span>{selectedCategory.subjects.length} matières</span>
+                                        <span>•</span>
+                                        <span>{selectedCategory.totalHours.toFixed(1)}h Total</span>
+                                    </div>
                                 </div>
                                 <button
-                                    onClick={() => setSelectedSubject(null)}
-                                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                                    onClick={() => setSelectedCategory(null)}
+                                    className="p-2 hover:bg-white/20 rounded-lg transition-colors shrink-0"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-6 h-6" />
                                 </button>
                             </div>
                         </div>
 
                         {/* Content */}
-                        <div className="p-5 space-y-4">
-                            {/* Progress */}
-                            <div className="text-center p-4 bg-slate-50 rounded-xl">
-                                <p className="text-4xl font-bold text-slate-800">
-                                    {((selectedSubject.hoursCompleted / selectedSubject.totalHours) * 100).toFixed(0)}%
-                                </p>
-                                <p className="text-sm text-slate-500 mt-1">de progression</p>
-                                <div className="mt-3 h-3 bg-slate-200 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full"
-                                        style={{ width: `${(selectedSubject.hoursCompleted / selectedSubject.totalHours) * 100}%` }}
-                                    />
+                        <div className="p-5 overflow-y-auto space-y-4">
+                            <div className="grid grid-cols-2 gap-3 mb-6">
+                                <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
+                                    <p className="text-emerald-700 text-xs font-bold uppercase mb-1">Effectuées</p>
+                                    <p className="text-2xl font-bold text-emerald-800">{selectedCategory.hoursCompleted.toFixed(1)}h</p>
+                                </div>
+                                <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 text-center">
+                                    <p className="text-amber-700 text-xs font-bold uppercase mb-1">Restantes</p>
+                                    <p className="text-2xl font-bold text-amber-800">{selectedCategory.hoursRemaining.toFixed(1)}h</p>
                                 </div>
                             </div>
 
-                            {/* Heures détaillées */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                                    <div className="flex items-center gap-2 text-emerald-700 mb-1">
-                                        <CheckCircle className="w-4 h-4" />
-                                        <span className="text-xs font-medium">Effectuées</span>
-                                    </div>
-                                    <p className="text-2xl font-bold text-emerald-800">{selectedSubject.hoursCompleted.toFixed(1)}h</p>
-                                </div>
-                                <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
-                                    <div className="flex items-center gap-2 text-amber-700 mb-1">
-                                        <Clock className="w-4 h-4" />
-                                        <span className="text-xs font-medium">Restantes</span>
-                                    </div>
-                                    <p className="text-2xl font-bold text-amber-800">{selectedSubject.hoursRemaining.toFixed(1)}h</p>
-                                </div>
-                            </div>
+                            <h4 className="font-bold text-slate-800 border-b border-slate-100 pb-2">Détail par matière</h4>
 
-                            {/* Total */}
-                            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                                <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center">
-                                    <BookOpen className="w-5 h-5 text-slate-600" />
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-slate-800">Total prévu</p>
-                                    <p className="text-sm text-slate-500">{selectedSubject.totalHours.toFixed(1)} heures</p>
-                                </div>
+                            <div className="space-y-3">
+                                {selectedCategory.subjects.map(subject => {
+                                    const subProgress = subject.totalHours > 0
+                                        ? (subject.hoursCompleted / subject.totalHours) * 100
+                                        : 0;
+
+                                    return (
+                                        <div key={subject.id} className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="font-medium text-slate-800 text-sm">{subject.nom}</span>
+                                                <span className="text-xs font-bold px-2 py-0.5 bg-white rounded border border-slate-200 text-slate-600">
+                                                    {subProgress.toFixed(0)}%
+                                                </span>
+                                            </div>
+
+                                            <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden mb-2">
+                                                <div
+                                                    className="h-full bg-indigo-500 rounded-full"
+                                                    style={{ width: `${subProgress}%` }}
+                                                />
+                                            </div>
+
+                                            <div className="flex justify-between text-xs text-slate-500">
+                                                <span>Fait: {subject.hoursCompleted.toFixed(1)}h</span>
+                                                <span className={subject.hoursRemaining > 0 ? "text-amber-600 font-medium" : "text-emerald-600 font-medium"}>
+                                                    Reste: {subject.hoursRemaining.toFixed(1)}h
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>

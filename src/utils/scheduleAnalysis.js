@@ -1,10 +1,19 @@
-/**
- * Schedule Analysis Utilities
- * Détection d'examens et calcul des heures restantes
- */
+// Date de début du Semestre 2 (28 janvier)
+// Note: On définit dynamiquement l'année pour gérer le changement d'année scolaire
+const getAcademicYearDates = () => {
+    const now = new Date();
+    const currentMonth = now.getMonth(); // 0-11
 
-// Date de fin du S1 (22 janvier 2026)
-const S1_END_DATE = new Date('2026-01-22T23:59:59');
+    // Si on est entre Janvier (0) et Juillet (6), le début d'année était Septembre l'an dernier
+    // Si on est entre Septembre (8) et Décembre (11), le début est Septembre cette année
+    const startYear = currentMonth < 7 ? now.getFullYear() - 1 : now.getFullYear();
+
+    return {
+        start: new Date(startYear, 8, 1), // 1er Septembre
+        end: new Date(startYear + 1, 6, 31), // 31 Juillet
+        s2Start: new Date(startYear + 1, 0, 28) // 28 Janvier
+    };
+};
 
 /**
  * Détermine si un événement est un examen
@@ -16,8 +25,6 @@ export const isExamEvent = (event) => {
         event.location || '',
         event.description || ''
     ].join(' ').toLowerCase();
-
-    
 
     // Patterns pour détecter un examen (mots-clés clairs uniquement)
     const examPatterns = [
@@ -42,7 +49,6 @@ export const isExamEvent = (event) => {
  */
 export const detectExams = (events) => {
     const now = new Date();
-
     return events
         .filter(event => isExamEvent(event))
         .filter(event => new Date(event.start) >= now) // Seulement les futurs
@@ -60,7 +66,8 @@ export const detectExams = (events) => {
  * @returns {string} "S1" ou "S2"
  */
 export const getSemester = (date) => {
-    return date <= S1_END_DATE ? 'S1' : 'S2';
+    const { s2Start } = getAcademicYearDates();
+    return date < s2Start ? 'S1' : 'S2';
 };
 
 /**
@@ -73,6 +80,7 @@ export const getSemester = (date) => {
 export const calculateHoursBySubject = (events, ues, semester = 'all') => {
     const now = new Date();
     const hoursBySubject = {};
+    const { start: yearStart, end: yearEnd } = getAcademicYearDates();
 
     // Initialiser toutes les UEs
     ues.forEach(ue => {
@@ -87,10 +95,14 @@ export const calculateHoursBySubject = (events, ues, semester = 'all') => {
         };
     });
 
-    // Parcourir les événements et les associer aux UEs
+    // Parcourir les événements
     events.forEach(event => {
-        const eventDate = new Date(event.start);
-        const eventSemester = getSemester(eventDate);
+        const eventStart = new Date(event.start);
+
+        // Ignorer les événements hors de l'année scolaire
+        if (eventStart < yearStart || eventStart > yearEnd) return;
+
+        const eventSemester = getSemester(eventStart);
 
         // Filtrer par semestre si spécifié
         if (semester !== 'all' && eventSemester !== semester) return;
@@ -99,13 +111,35 @@ export const calculateHoursBySubject = (events, ues, semester = 'all') => {
         const duration = (new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
 
         // Essayer de trouver l'UE correspondante
-        const matchedUE = findMatchingUE(event.title, ues);
+        let matchedUE = findMatchingUE(event.title, ues);
+        let subjectId = matchedUE ? matchedUE.id : null;
 
-        if (matchedUE) {
-            const subject = hoursBySubject[matchedUE.id];
+        // Si pas de correspondance, on crée une "Matière détectée" dynamique
+        if (!matchedUE) {
+            // Nettoyer le titre pour grouper les événements similaires (ex: "TD Anglais" et "Anglais")
+            const cleanTitle = event.title.replace(/^(TD|TP|CM|Cours)\s+/i, '').trim();
+            const dynamicId = `dynamic_${cleanTitle.toLowerCase().replace(/\s+/g, '_')}`;
+
+            if (!hoursBySubject[dynamicId]) {
+                hoursBySubject[dynamicId] = {
+                    id: dynamicId,
+                    nom: cleanTitle || "Autre",
+                    category: "AUTRES / NON CLASSÉ", // Catégorie par défaut pour les non-reconnus
+                    hoursCompleted: 0,
+                    hoursRemaining: 0,
+                    totalHours: 0,
+                    events: [],
+                    isDynamic: true
+                };
+            }
+            subjectId = dynamicId;
+        }
+
+        if (subjectId) {
+            const subject = hoursBySubject[subjectId];
             subject.totalHours += duration;
 
-            if (eventDate < now) {
+            if (eventStart < now) {
                 subject.hoursCompleted += duration;
             } else {
                 subject.hoursRemaining += duration;
@@ -114,7 +148,7 @@ export const calculateHoursBySubject = (events, ues, semester = 'all') => {
             subject.events.push({
                 ...event,
                 duration,
-                isCompleted: eventDate < now
+                isCompleted: eventStart < now
             });
         }
     });
@@ -137,18 +171,23 @@ const findMatchingUE = (title, ues) => {
     for (const ue of ues) {
         const normalizedUE = ue.nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-        // Vérifier si le titre contient des mots-clés de l'UE
-        const ueWords = normalizedUE.split(/\s+/).filter(w => w.length > 3);
-        const matchCount = ueWords.filter(word => normalizedTitle.includes(word)).length;
-
-        if (matchCount >= 2 || (ueWords.length === 1 && matchCount === 1)) {
-            return ue;
-        }
-
-        // Correspondance directe partielle
+        // 1. Correspondance exacte ou partielle directe
         if (normalizedTitle.includes(normalizedUE) || normalizedUE.includes(normalizedTitle)) {
             return ue;
         }
+
+        // 2. Correspondance par mots-clés
+        const ueWords = normalizedUE.split(/\s+/).filter(w => w.length > 2); // Mots significatifs > 2 lettres
+        const titleWords = normalizedTitle.split(/\s+/).filter(w => w.length > 2);
+
+        // Compter combien de mots de l'UE sont présents dans le titre
+        const matchCount = ueWords.filter(word => titleWords.some(t => t.includes(word))).length;
+
+        // Critères assouplis :
+        // - Si l'UE a peu de mots (1-2), il faut qu'au moins 1 mot majeur corresponde (ex: "Anglais" dans "Langue Anglais")
+        // - Si l'UE a beaucoup de mots, il en faut au moins 2
+        if (ueWords.length <= 2 && matchCount >= 1) return ue;
+        if (ueWords.length > 2 && matchCount >= 2) return ue;
     }
 
     return null;
