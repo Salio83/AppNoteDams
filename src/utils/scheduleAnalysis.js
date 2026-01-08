@@ -17,16 +17,7 @@ export const isExamEvent = (event) => {
         event.description || ''
     ].join(' ').toLowerCase();
 
-    // Exclusions : matières dont le nom contient des mots-clés d'examen
-    const exclusions = [
-        /controle de gestion/i,
-        /contrôle de gestion/i
-    ];
-
-    // Si c'est une exclusion, ce n'est pas un examen
-    if (exclusions.some(pattern => pattern.test(text))) {
-        return false;
-    }
+    
 
     // Patterns pour détecter un examen (mots-clés clairs uniquement)
     const examPatterns = [

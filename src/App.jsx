@@ -10,6 +10,7 @@ import RemainingHours from './pages/RemainingHours';
 import Tasks from './pages/Tasks';
 import Calendar from './pages/Calendar';
 import Login from './pages/Login';
+import Profile from './pages/Profile';
 import { ScheduleProvider } from './context/ScheduleContext';
 import { TasksProvider } from './context/TasksContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -52,6 +53,7 @@ function AppContent() {
                                         <Route path="/hours" element={<RemainingHours />} />
                                         <Route path="/tasks" element={<Tasks />} />
                                         <Route path="/calendar" element={<Calendar />} />
+                                        <Route path="/profile" element={<Profile />} />
                                         <Route path="*" element={<Navigate to="/" replace />} />
                                     </Routes>
                                 </Layout>

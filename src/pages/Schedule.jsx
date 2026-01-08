@@ -185,18 +185,12 @@ const Schedule = () => {
                         </p>
                     </div>
                 </div>
-                <div className="flex gap-2 items-center w-full md:max-w-sm">
-                    <input
-                        type="text"
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
-                        placeholder="URL .ics"
-                        className="flex-1 rounded-lg border-gray-300 shadow-sm text-sm p-2 border"
-                    />
+                <div>
                     <button
                         onClick={loadSchedule}
                         disabled={loading}
-                        className="p-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:opacity-50"
+                        className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors disabled:opacity-50"
+                        title="Actualiser l'emploi du temps"
                     >
                         <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                     </button>

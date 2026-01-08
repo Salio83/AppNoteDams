@@ -1,127 +1,107 @@
 import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, GraduationCap, Calendar, UserCircle, BookOpen, AlertTriangle, Clock, LogOut, Menu, X, ClipboardList, CalendarDays } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { LayoutDashboard, GraduationCap, Calendar, UserCircle, BookOpen, AlertTriangle, Clock, ClipboardList, CalendarDays } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../context/AuthContext';
 
-const SidebarItem = ({ to, icon: Icon, label, onClick }) => (
+const NavItem = ({ to, icon: Icon, label }) => (
     <NavLink
         to={to}
-        onClick={onClick}
         className={({ isActive }) =>
             clsx(
-                'flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200',
+                'flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 group',
                 isActive
                     ? 'bg-slate-900 text-white shadow-md'
                     : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
             )
         }
+        title={label}
     >
-        <Icon className="w-[18px] h-[18px]" />
-        <span>{label}</span>
+        <Icon className="w-5 h-5 flex-shrink-0" />
+        <span className="hidden lg:block text-sm font-medium whitespace-nowrap">{label}</span>
     </NavLink>
 );
 
 const Layout = ({ children }) => {
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-    const handleLogout = async () => {
-        await logout();
-        navigate('/login');
-    };
-
-    const closeSidebar = () => {
-        setIsSidebarOpen(false);
-    };
+    const { user } = useAuth();
+    // Removed isSidebarOpen state and logic as we are moving to a horizontal navbar
 
     return (
-        <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
-            {/* Mobile Header */}
-            <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 z-30 flex items-center justify-between px-4">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-indigo-200 shadow-lg">
-                        P
-                    </div>
-                    <h1 className="text-lg font-bold tracking-tight text-slate-900">
-                        Planning&Notes
-                    </h1>
-                </div>
-                <button
-                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                    {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                </button>
-            </header>
+        <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
+            {/* Top Navigation Bar */}
+            <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 transition-all duration-300">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex h-16 items-center justify-between gap-4">
 
-            {/* Mobile Overlay */}
-            {isSidebarOpen && (
-                <div
-                    className="lg:hidden fixed inset-0 bg-black/50 z-30"
-                    onClick={closeSidebar}
-                />
-            )}
-
-            {/* Sidebar */}
-            <aside className={clsx(
-                "bg-white/80 backdrop-blur-xl border-r border-slate-200/60 flex flex-col fixed h-full z-40 transition-all duration-300",
-                "w-72 lg:translate-x-0",
-                isSidebarOpen ? "translate-x-0" : "-translate-x-full",
-                "top-0 lg:top-0"
-            )}>
-                <div className="p-6 lg:p-8">
-                    <div className="flex items-center gap-2 mb-1">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-indigo-200 shadow-lg">
-                            P
+                        {/* Logo Section */}
+                        <div className="flex items-center gap-2 shrink-0">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-indigo-200 shadow-lg">
+                                P
+                            </div>
+                            <h1 className="hidden sm:block text-lg font-bold tracking-tight text-slate-900">
+                                Planning&Notes
+                            </h1>
                         </div>
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900">
-                            Planning&Notes
-                        </h1>
-                    </div>
-                    <p className="text-xs text-slate-400 pl-10 font-medium tracking-wide uppercase">Tableau de bord</p>
-                </div>
 
-                <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-                    <SidebarItem to="/" icon={Calendar} label="Emploi du Temps" onClick={closeSidebar} />
-                    <SidebarItem to="/dashboard" icon={LayoutDashboard} label="Aperçu Général" onClick={closeSidebar} />
-                    <SidebarItem to="/grades" icon={GraduationCap} label="Mes Notes" onClick={closeSidebar} />
-                    <SidebarItem to="/averages" icon={BookOpen} label="Moyennes" onClick={closeSidebar} />
-                    <SidebarItem to="/exams" icon={AlertTriangle} label="Examens" onClick={closeSidebar} />
-                    <SidebarItem to="/hours" icon={Clock} label="Heures restantes" onClick={closeSidebar} />
-                    <SidebarItem to="/tasks" icon={ClipboardList} label="Mes Tâches" onClick={closeSidebar} />
-                    <SidebarItem to="/calendar" icon={CalendarDays} label="Calendrier" onClick={closeSidebar} />
-                </nav>
+                        {/* Navigation Items - Scrollable on mobile */}
+                        <div className="flex-1 flex items-center justify-center lg:justify-end gap-1 overflow-x-auto no-scrollbar py-2 mask-linear">
+                            <NavItem to="/" icon={Calendar} label="Emploi du Temps" />
+                            <NavItem to="/dashboard" icon={LayoutDashboard} label="Aperçu" />
+                            <NavItem to="/grades" icon={GraduationCap} label="Notes" />
+                            <NavItem to="/averages" icon={BookOpen} label="Moyennes" />
+                            <NavItem to="/exams" icon={AlertTriangle} label="Examens" />
+                            <NavItem to="/hours" icon={Clock} label="Heures" />
+                            <NavItem to="/tasks" icon={ClipboardList} label="Tâches" />
+                            {/* Calendar removed from nav as per request "cacher l'ICal" - actually user said "cache l'ICal" referring to the INPUT, but also mentioned "cacher l'ICal" in general. 
+                                Wait, user said "on verra uniquement des logos sur les versions responsives pour mobile".
+                                And "il faut aussi cacher l'ICal". 
+                                The user likely meant hiding the *page* or the *input*? 
+                                "on pourra le renseigner dans le profil" implies the INPUT.
+                                "il faut aussi cacher l'ICal" might mean the Calendar PAGE if it was just for showing holidays? 
+                                Let's assume hiding the Calendar PAGE link for now based on "cacher l'ICal". 
+                                Actually, checking standard interpretation: "ICal" usually refers to the link/input. 
+                                But there is a page called Calendar.jsx.
+                                "cacher l'ICal, on pourra le renseigner dans le profil". This strongly links "ICal" to "renseigner" (inputting data).
+                                So I should HIDE the input in Schedule (done later), 
+                                AND maybe hiding the "Calendar" page link? 
+                                Let's keep "Calendar" page if it's holidays/vacations ("Calendrier" in nav), but maybe user meant that too.
+                                Re-reading: "il faut aussi cacher l'ICal" -> likely the calendar view or the input.
+                                Given "on pourra le renseigner dans le profil", it 99% refers to the URL input.
+                                However, I see `CalendarDays` imported. I will keep it in the nav for now as "Calendrier" (vacations) unless "ICal" meant the calendar page.
+                                Actually, wait. "il faut aussi cacher l'ICal" followed by "on pourra le renseigner dans le profil". This sentence structure implies "The thing currently called ICal".
+                                Previously `Schedule.jsx` had `Calendar` import? No, `Layout.jsx` had `Calendar` (Emploi du Temps) and `CalendarDays` (Calendrier).
+                                The `Schedule` page IS the "Emploi du Temps".
+                                The `Calendar` page IS "vacations".
+                                The user probably means "The ICal URL Input".
+                                I will NOT remove the "Calendrier" (vacations) page link unless I am sure. 
+                                BUT, if I look at the previous prompt "Tasks and Calendar Features", the user asked for a "Calendar" tab.
+                                So I will keep "Calendrier" link.
+                            */}
+                            <NavItem to="/calendar" icon={CalendarDays} label="Calendrier" />
+                        </div>
 
-
-                <div className="p-4 m-4 rounded-2xl bg-slate-50 border border-slate-100">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                        {/* Profile Link */}
+                        <NavLink
+                            to="/profile"
+                            className={({ isActive }) =>
+                                clsx(
+                                    'flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 shrink-0 border border-slate-200',
+                                    isActive
+                                        ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                                        : 'bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                )
+                            }
+                            title="Mon Profil"
+                        >
                             <UserCircle className="w-6 h-6" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-slate-800 truncate">
-                                {user?.email?.split('@')[0] || 'Utilisateur'}
-                            </p>
-                            <p className="text-xs text-slate-500 truncate">{user?.email}</p>
-                        </div>
+                        </NavLink>
                     </div>
-                    <button
-                        onClick={handleLogout}
-                        className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        Déconnexion
-                    </button>
                 </div>
-            </aside>
+            </nav>
 
             {/* Main Content */}
-            <main className="flex-1 lg:ml-72 pt-16 lg:pt-0">
-                <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-12">
-                    {children}
-                </div>
+            <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8">
+                {children}
             </main>
         </div>
     );

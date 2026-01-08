@@ -1,0 +1,138 @@
+import React, { useState, useEffect } from 'react';
+import { Save, UserCircle, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
+const Profile = () => {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    // States for form fields
+    const [icalUrl, setIcalUrl] = useState('');
+    const [filiere, setFiliere] = useState('');
+    const [annee, setAnnee] = useState('');
+    const [savedv, setSaved] = useState(false);
+
+    // Initial load from localStorage
+    useEffect(() => {
+        const storedUrl = localStorage.getItem('schedule_url');
+        if (storedUrl) setIcalUrl(storedUrl);
+
+        // Placeholders for future storage
+        // const storedFiliere = localStorage.getItem('filiere');
+        // if (storedFiliere) setFiliere(storedFiliere);
+    }, []);
+
+    const handleSave = () => {
+        localStorage.setItem('schedule_url', icalUrl);
+        // localStorage.setItem('filiere', filiere);
+        // localStorage.setItem('annee', annee);
+
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+    };
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/login');
+    };
+
+    return (
+        <div className="space-y-6 max-w-2xl mx-auto">
+            <header>
+                <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <UserCircle className="w-8 h-8 text-indigo-600" />
+                    Mon Profil
+                </h2>
+                <p className="text-slate-500 mt-1">Gérez vos préférences et informations personnelles</p>
+            </header>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6 space-y-6">
+
+                {/* User Info Section */}
+                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-xl font-bold">
+                        {user?.email?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="font-semibold text-slate-900">Compte Utilisateur</h3>
+                        <p className="text-sm text-slate-500">{user?.email}</p>
+                    </div>
+                    <button
+                        onClick={handleLogout}
+                        className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                        title="Se déconnecter"
+                    >
+                        <LogOut className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <hr className="border-slate-100" />
+
+                {/* Form Section */}
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                            URL de l'emploi du temps (ICal)
+                        </label>
+                        <input
+                            type="text"
+                            value={icalUrl}
+                            onChange={(e) => setIcalUrl(e.target.value)}
+                            placeholder="https://..."
+                            className="w-full rounded-lg border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 transition-all text-sm"
+                        />
+                        <p className="mt-1 text-xs text-slate-400">
+                            Lien .ics fourni par l'université pour synchroniser votre emploi du temps.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                                Filière
+                            </label>
+                            <input
+                                type="text"
+                                value={filiere}
+                                onChange={(e) => setFiliere(e.target.value)}
+                                placeholder="Ex: Informatique"
+                                className="w-full rounded-lg border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 transition-all text-sm"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                                Année
+                            </label>
+                            <input
+                                type="text"
+                                value={annee}
+                                onChange={(e) => setAnnee(e.target.value)}
+                                placeholder="Ex: L3, M1..."
+                                className="w-full rounded-lg border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 transition-all text-sm"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="pt-4 flex items-center justify-end gap-3">
+                    {savedv && (
+                        <span className="text-sm text-emerald-600 font-medium animate-fadeIn">
+                            Modifications enregistrées !
+                        </span>
+                    )}
+                    <button
+                        onClick={handleSave}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm shadow-indigo-200"
+                    >
+                        <Save className="w-4 h-4" />
+                        Enregistrer
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    );
+};
+
+export default Profile;
