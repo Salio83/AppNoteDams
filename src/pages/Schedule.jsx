@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ICAL from 'ical.js';
-import { RefreshCw, AlertCircle, CalendarDays, ClipboardList, Clock } from 'lucide-react';
+import { RefreshCw, AlertCircle, CalendarDays, ClipboardList, Clock, Filter, X } from 'lucide-react';
 import { getEventColor } from '../utils/colors';
 
 const WEEK_DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
@@ -20,6 +20,21 @@ const Schedule = () => {
         return dateParam ? new Date(dateParam) : new Date();
     });
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [filter, setFilter] = useState(''); // Filter by subject
+    const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+    // Extract unique subjects from events for filter dropdown
+    const subjects = useMemo(() => {
+        const uniqueSubjects = new Set();
+        events.forEach(e => {
+            if (e.title) {
+                // Extract base subject name (before any specific suffixes)
+                const subject = e.title.split(' - ')[0].split(' (')[0].trim();
+                if (subject) uniqueSubjects.add(subject);
+            }
+        });
+        return Array.from(uniqueSubjects).sort();
+    }, [events]);
 
     useEffect(() => {
         if (url) {
@@ -123,7 +138,13 @@ const Schedule = () => {
         setCurrentDate(new Date());
     };
 
-    const currentWeekEvents = events.filter(e => e.start >= weekStart && e.end <= weekEnd);
+    // Apply filter to week events
+    const currentWeekEvents = events.filter(e => {
+        const inWeek = e.start >= weekStart && e.end <= weekEnd;
+        if (!inWeek) return false;
+        if (!filter) return true;
+        return e.title && e.title.toLowerCase().includes(filter.toLowerCase());
+    });
 
     // Détection des chevauchements entre événements
     const eventsOverlap = (a, b) => {
@@ -185,50 +206,93 @@ const Schedule = () => {
         <div className="space-y-2 lg:space-y-4 h-[calc(100vh-6rem)] lg:h-[calc(100vh-6rem)] flex flex-col">
             {/* Mobile Shortcuts - masqués pour gagner de l'espace */}
             <div className="hidden md:grid grid-cols-3 gap-3">
-                <Link to="/calendar" className="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors">
+                <Link to="/calendar" className="flex flex-col items-center justify-center p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                     <CalendarDays className="w-5 h-5 text-indigo-500 mb-1" />
-                    <span className="text-xs font-medium text-slate-700">Calendrier</span>
+                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Calendrier</span>
                 </Link>
-                <Link to="/tasks" className="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors">
+                <Link to="/tasks" className="flex flex-col items-center justify-center p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                     <ClipboardList className="w-5 h-5 text-emerald-500 mb-1" />
-                    <span className="text-xs font-medium text-slate-700">Tâches</span>
+                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Tâches</span>
                 </Link>
-                <Link to="/hours" className="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors">
+                <Link to="/hours" className="flex flex-col items-center justify-center p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                     <Clock className="w-5 h-5 text-amber-500 mb-1" />
-                    <span className="text-xs font-medium text-slate-700">Heures</span>
+                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Heures</span>
                 </Link>
             </div>
 
             <header className="flex flex-row justify-between items-center gap-2 shrink-0">
                 <div className="flex items-center gap-2 lg:gap-4 flex-wrap">
-                    <h2 className="text-lg lg:text-2xl font-bold text-gray-800">Emploi du temps</h2>
-                    <div className="flex bg-slate-100 rounded-lg p-1">
-                        <button onClick={handlePrevWeek} className="p-1 hover:bg-white hover:shadow-sm rounded transition-all text-slate-600">
+                    <h2 className="text-lg lg:text-2xl font-bold text-slate-800 dark:text-white">Emploi du temps</h2>
+                    <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+                        <button onClick={handlePrevWeek} className="p-1 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm rounded transition-all text-slate-600 dark:text-slate-300">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                         </button>
-                        <button onClick={handleToday} className="px-2 lg:px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-white hover:shadow-sm rounded transition-all">
+                        <button onClick={handleToday} className="px-2 lg:px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm rounded transition-all">
                             {weekStart.getDate()} - {weekEnd.getDate()} {weekEnd.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '')}
                         </button>
-                        <button onClick={handleNextWeek} className="p-1 hover:bg-white hover:shadow-sm rounded transition-all text-slate-600">
+                        <button onClick={handleNextWeek} className="p-1 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm rounded transition-all text-slate-600 dark:text-slate-300">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                         </button>
                     </div>
-                    <p className="text-sm font-medium text-slate-500 capitalize hidden lg:block">
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 capitalize hidden lg:block">
                         {weekStart.toLocaleDateString('fr-FR', { month: 'long', day: 'numeric' })} - {weekEnd.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
                     </p>
                 </div>
-                <button
-                    onClick={loadSchedule}
-                    disabled={loading}
-                    className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors disabled:opacity-50 shrink-0"
-                    title="Actualiser l'emploi du temps"
-                >
-                    <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-                </button>
+                <div className="flex items-center gap-2">
+                    {/* Filter Dropdown */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                            className={`p-2 rounded-lg transition-colors flex items-center gap-1 ${filter ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+                            title="Filtrer par matière"
+                        >
+                            <Filter className="w-5 h-5" />
+                            {filter && <span className="hidden lg:inline text-xs font-medium truncate max-w-[80px]">{filter}</span>}
+                        </button>
+
+                        {showFilterDropdown && (
+                            <>
+                                <div className="fixed inset-0 z-30" onClick={() => setShowFilterDropdown(false)} />
+                                <div className="absolute right-0 top-full mt-2 z-40 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 w-64 max-h-64 overflow-y-auto animate-slideUp">
+                                    {filter && (
+                                        <button
+                                            onClick={() => { setFilter(''); setShowFilterDropdown(false); }}
+                                            className="w-full px-4 py-2 text-left text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center gap-2"
+                                        >
+                                            <X className="w-4 h-4" />
+                                            Effacer le filtre
+                                        </button>
+                                    )}
+                                    {subjects.map(subject => (
+                                        <button
+                                            key={subject}
+                                            onClick={() => { setFilter(subject); setShowFilterDropdown(false); }}
+                                            className={`w-full px-4 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${filter === subject ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium' : 'text-slate-700 dark:text-slate-300'}`}
+                                        >
+                                            {subject}
+                                        </button>
+                                    ))}
+                                    {subjects.length === 0 && (
+                                        <p className="px-4 py-2 text-sm text-slate-400 dark:text-slate-500">Aucune matière trouvée</p>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    <button
+                        onClick={loadSchedule}
+                        disabled={loading}
+                        className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 shrink-0"
+                        title="Actualiser l'emploi du temps"
+                    >
+                        <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                    </button>
+                </div>
             </header>
 
             {error && (
-                <div className="bg-rose-50 text-rose-600 p-3 rounded-lg flex items-center gap-2 text-sm shrink-0 border border-rose-100">
+                <div className="bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 p-3 rounded-lg flex items-center gap-2 text-sm shrink-0 border border-rose-100 dark:border-rose-800">
                     <AlertCircle className="w-4 h-4" />
                     {error}
                 </div>
@@ -242,19 +306,19 @@ const Schedule = () => {
             />
 
             {/* Desktop Week Grid */}
-            <div className="hidden lg:flex flex-1 overflow-auto bg-white rounded-2xl shadow-sm border border-slate-200/60 min-h-0">
+            <div className="hidden lg:flex flex-1 overflow-auto bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700 min-h-0">
                 <div className="grid grid-cols-[auto_repeat(5,1fr)] w-full">
                     {/* Header Row */}
-                    <div className="border-b border-slate-100 p-2 bg-slate-50 sticky top-0 z-10"></div>
+                    <div className="border-b border-slate-100 dark:border-slate-700 p-2 bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"></div>
                     {WEEK_DAYS.map((day, index) => {
                         const currentDayDate = new Date(weekStart);
                         currentDayDate.setDate(weekStart.getDate() + index);
                         const isToday = new Date().toDateString() === currentDayDate.toDateString();
 
                         return (
-                            <div key={day} className={`border-b border-l border-slate-100 p-2 bg-slate-50 sticky top-0 z-10 text-center ${isToday ? 'bg-blue-50/50' : ''}`}>
-                                <div className={`text-sm font-semibold ${isToday ? 'text-blue-600' : 'text-slate-700'}`}>{day}</div>
-                                <div className={`text-xs ${isToday ? 'text-blue-500' : 'text-slate-400'}`}>
+                            <div key={day} className={`border-b border-l border-slate-100 dark:border-slate-700 p-2 bg-slate-50 dark:bg-slate-900 sticky top-0 z-10 text-center ${isToday ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`}>
+                                <div className={`text-sm font-semibold ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'}`}>{day}</div>
+                                <div className={`text-xs ${isToday ? 'text-blue-500 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}>
                                     {currentDayDate.getDate()}
                                 </div>
                             </div>
@@ -264,7 +328,7 @@ const Schedule = () => {
                     {/* Time Slots */}
                     {HOURS.map(hour => (
                         <React.Fragment key={hour}>
-                            <div className="border-b border-slate-100 p-1 text-[10px] text-slate-400 text-right h-12 -mt-2">
+                            <div className="border-b border-slate-100 dark:border-slate-700 p-1 text-[10px] text-slate-400 dark:text-slate-500 text-right h-12 -mt-2">
                                 {hour}:00
                             </div>
                             {Array.from({ length: 5 }).map((_, dayIndex) => {
@@ -272,7 +336,7 @@ const Schedule = () => {
                                 const hourEvents = processedEventsByDay[dayIndex].filter(e => e.start.getHours() === hour);
 
                                 return (
-                                    <div key={dayIndex} className="border-b border-l border-slate-100 h-12 relative bg-slate-50/10 hover:bg-slate-50/30 transition-colors">
+                                    <div key={dayIndex} className="border-b border-l border-slate-100 dark:border-slate-700 h-12 relative bg-slate-50/10 dark:bg-slate-800/50 hover:bg-slate-50/30 dark:hover:bg-slate-700/50 transition-colors">
                                         {hourEvents.map((evt, idx) => {
                                             const colors = getEventColor(evt.title);
 
@@ -324,7 +388,7 @@ const Schedule = () => {
                     onClick={() => setSelectedEvent(null)}
                 >
                     <div
-                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
+                        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
@@ -340,7 +404,7 @@ const Schedule = () => {
                                 </div>
                                 <button
                                     onClick={() => setSelectedEvent(null)}
-                                    className="p-2 hover:bg-white/30 rounded-lg transition-colors"
+                                    className="p-2 hover:bg-white/30 dark:hover:bg-black/20 rounded-lg transition-colors"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -352,17 +416,17 @@ const Schedule = () => {
                         {/* Content */}
                         <div className="p-5 space-y-4">
                             {/* Horaires */}
-                            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-slate-800">
+                                    <p className="font-semibold text-slate-800 dark:text-slate-100">
                                         {selectedEvent.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - {selectedEvent.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                                     </p>
-                                    <p className="text-sm text-slate-500">
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">
                                         Durée: {Math.floor((selectedEvent.end - selectedEvent.start) / (1000 * 60 * 60))}h{((selectedEvent.end - selectedEvent.start) / (1000 * 60)) % 60 > 0 ? `${((selectedEvent.end - selectedEvent.start) / (1000 * 60)) % 60}min` : ''}
                                     </p>
                                 </div>
@@ -370,31 +434,31 @@ const Schedule = () => {
 
                             {/* Lieu */}
                             {selectedEvent.location && (
-                                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                    <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                         </svg>
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-slate-800">Salle</p>
-                                        <p className="text-sm text-slate-500">{selectedEvent.location}</p>
+                                        <p className="font-semibold text-slate-800 dark:text-slate-100">Salle</p>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">{selectedEvent.location}</p>
                                     </div>
                                 </div>
                             )}
 
                             {/* Description / Prof */}
                             {selectedEvent.description && (
-                                <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
-                                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
-                                        <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/50 rounded-lg flex items-center justify-center shrink-0">
+                                        <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                         </svg>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-semibold text-slate-800">Informations</p>
-                                        <p className="text-sm text-slate-500 whitespace-pre-wrap break-words">{selectedEvent.description}</p>
+                                        <p className="font-semibold text-slate-800 dark:text-slate-100">Informations</p>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 whitespace-pre-wrap break-words">{selectedEvent.description}</p>
                                     </div>
                                 </div>
                             )}
@@ -459,7 +523,7 @@ const MobileDayView = ({ weekStart, processedEventsByDay, initialDate }) => {
     return (
         <div className="lg:hidden flex-1 flex flex-col min-h-0">
             {/* Day Selector Tabs */}
-            <div className="flex bg-slate-100 rounded-xl p-1 mb-2 shrink-0">
+            <div className="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 mb-2 shrink-0">
                 {MOBILE_WEEK_DAYS.map((day, index) => {
                     const dayDate = getDayDate(index);
                     const isToday = new Date().toDateString() === dayDate.toDateString();
@@ -471,18 +535,18 @@ const MobileDayView = ({ weekStart, processedEventsByDay, initialDate }) => {
                             key={day}
                             onClick={() => setSelectedDayIndex(index)}
                             className={`flex-1 py-2 px-1 rounded-lg text-center transition-all relative ${isSelected
-                                ? 'bg-white shadow-sm text-slate-900'
+                                ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
                                 : isToday
-                                    ? 'text-blue-600'
-                                    : 'text-slate-500 hover:text-slate-700'
+                                    ? 'text-blue-600 dark:text-blue-400'
+                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                                 }`}
                         >
-                            <div className={`text-xs font-semibold ${isSelected ? 'text-slate-900' : ''}`}>{day}</div>
-                            <div className={`text-lg font-bold ${isToday && !isSelected ? 'text-blue-600' : ''}`}>
+                            <div className={`text-xs font-semibold ${isSelected ? 'text-slate-900 dark:text-white' : ''}`}>{day}</div>
+                            <div className={`text-lg font-bold ${isToday && !isSelected ? 'text-blue-600 dark:text-blue-400' : ''}`}>
                                 {dayDate.getDate()}
                             </div>
                             {hasEvents && (
-                                <div className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-indigo-500' : 'bg-slate-300'
+                                <div className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-500'
                                     }`} />
                             )}
                         </button>
@@ -493,8 +557,8 @@ const MobileDayView = ({ weekStart, processedEventsByDay, initialDate }) => {
             {/* Events List for Selected Day */}
             <div className="flex-1 overflow-y-auto space-y-2 pb-4">
                 {sortedEvents.length === 0 ? (
-                    <div className="bg-white rounded-xl p-6 text-center border border-slate-200/60">
-                        <div className="text-slate-400 text-sm">Aucun cours ce jour</div>
+                    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 text-center border border-slate-200/60 dark:border-slate-700">
+                        <div className="text-slate-400 dark:text-slate-500 text-sm">Aucun cours ce jour</div>
                     </div>
                 ) : (
                     sortedEvents.map((evt, idx) => {

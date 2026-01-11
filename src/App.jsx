@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Grades from './pages/Grades';
 import Schedule from './pages/Schedule';
@@ -14,6 +15,8 @@ import Profile from './pages/Profile';
 import { ScheduleProvider } from './context/ScheduleContext';
 import { TasksProvider } from './context/TasksContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
 
 // Composant pour protéger les routes
 const ProtectedRoute = ({ children }) => {
@@ -21,8 +24,8 @@ const ProtectedRoute = ({ children }) => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+                <div className="w-8 h-8 border-4 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 rounded-full animate-spin" />
             </div>
         );
     }
@@ -45,7 +48,8 @@ function AppContent() {
                             <TasksProvider>
                                 <Layout>
                                     <Routes>
-                                        <Route path="/" element={<Schedule />} />
+                                        <Route path="/" element={<Home />} />
+                                        <Route path="/schedule" element={<Schedule />} />
                                         <Route path="/dashboard" element={<Dashboard />} />
                                         <Route path="/grades" element={<Grades />} />
                                         <Route path="/averages" element={<Averages />} />
@@ -68,9 +72,13 @@ function AppContent() {
 
 function App() {
     return (
-        <AuthProvider>
-            <AppContent />
-        </AuthProvider>
+        <ThemeProvider>
+            <ToastProvider>
+                <AuthProvider>
+                    <AppContent />
+                </AuthProvider>
+            </ToastProvider>
+        </ThemeProvider>
     );
 }
 

@@ -216,7 +216,7 @@ const Exams = () => {
                                     </div>
                                     <div className="mt-4 pt-4 border-t border-slate-100">
                                         <Link
-                                            to={`/?date=${new Date(selectedExam.start).toISOString()}&eventId=${new Date(selectedExam.start).getTime()}`}
+                                            to={`/schedule?date=${new Date(selectedExam.start).toISOString()}&eventId=${new Date(selectedExam.start).getTime()}`}
                                             className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
                                         >
                                             <Calendar className="w-5 h-5" />
