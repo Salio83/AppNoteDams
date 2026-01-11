@@ -182,9 +182,9 @@ const Schedule = () => {
     const processedEventsByDay = eventsByDay.map(dayEvents => calculateEventColumns(dayEvents));
 
     return (
-        <div className="space-y-4 h-[calc(100vh-6rem)] lg:h-[calc(100vh-6rem)] flex flex-col">
-            {/* Mobile Shortcuts */}
-            <div className="grid grid-cols-3 gap-3 md:hidden">
+        <div className="space-y-2 lg:space-y-4 h-[calc(100vh-6rem)] lg:h-[calc(100vh-6rem)] flex flex-col">
+            {/* Mobile Shortcuts - masqués pour gagner de l'espace */}
+            <div className="hidden md:grid grid-cols-3 gap-3">
                 <Link to="/calendar" className="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors">
                     <CalendarDays className="w-5 h-5 text-indigo-500 mb-1" />
                     <span className="text-xs font-medium text-slate-700">Calendrier</span>
@@ -199,36 +199,32 @@ const Schedule = () => {
                 </Link>
             </div>
 
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 shrink-0">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Emploi du temps</h2>
-                    <div className="flex items-center gap-4 mt-1">
-                        <div className="flex bg-slate-100 rounded-lg p-1">
-                            <button onClick={handlePrevWeek} className="p-1 hover:bg-white hover:shadow-sm rounded transition-all text-slate-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-                            </button>
-                            <button onClick={handleToday} className="px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-white hover:shadow-sm rounded transition-all">
-                                {weekStart.getDate()} - {weekEnd.getDate()} {weekEnd.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '')}
-                            </button>
-                            <button onClick={handleNextWeek} className="p-1 hover:bg-white hover:shadow-sm rounded transition-all text-slate-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-                            </button>
-                        </div>
-                        <p className="text-sm font-medium text-slate-500 capitalize hidden sm:block">
-                            {weekStart.toLocaleDateString('fr-FR', { month: 'long', day: 'numeric' })} - {weekEnd.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
-                        </p>
+            <header className="flex flex-row justify-between items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 lg:gap-4 flex-wrap">
+                    <h2 className="text-lg lg:text-2xl font-bold text-gray-800">Emploi du temps</h2>
+                    <div className="flex bg-slate-100 rounded-lg p-1">
+                        <button onClick={handlePrevWeek} className="p-1 hover:bg-white hover:shadow-sm rounded transition-all text-slate-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                        </button>
+                        <button onClick={handleToday} className="px-2 lg:px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-white hover:shadow-sm rounded transition-all">
+                            {weekStart.getDate()} - {weekEnd.getDate()} {weekEnd.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '')}
+                        </button>
+                        <button onClick={handleNextWeek} className="p-1 hover:bg-white hover:shadow-sm rounded transition-all text-slate-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                        </button>
                     </div>
+                    <p className="text-sm font-medium text-slate-500 capitalize hidden lg:block">
+                        {weekStart.toLocaleDateString('fr-FR', { month: 'long', day: 'numeric' })} - {weekEnd.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
                 </div>
-                <div>
-                    <button
-                        onClick={loadSchedule}
-                        disabled={loading}
-                        className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors disabled:opacity-50"
-                        title="Actualiser l'emploi du temps"
-                    >
-                        <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-                    </button>
-                </div>
+                <button
+                    onClick={loadSchedule}
+                    disabled={loading}
+                    className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors disabled:opacity-50 shrink-0"
+                    title="Actualiser l'emploi du temps"
+                >
+                    <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                </button>
             </header>
 
             {error && (
@@ -463,7 +459,7 @@ const MobileDayView = ({ weekStart, processedEventsByDay, initialDate }) => {
     return (
         <div className="lg:hidden flex-1 flex flex-col min-h-0">
             {/* Day Selector Tabs */}
-            <div className="flex bg-slate-100 rounded-xl p-1 mb-3 shrink-0">
+            <div className="flex bg-slate-100 rounded-xl p-1 mb-2 shrink-0">
                 {MOBILE_WEEK_DAYS.map((day, index) => {
                     const dayDate = getDayDate(index);
                     const isToday = new Date().toDateString() === dayDate.toDateString();

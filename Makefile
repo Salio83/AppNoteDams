@@ -36,13 +36,15 @@ build:
 # Préparer le serveur (fixer permissions + créer dossiers)
 prepare:
 	@echo [PREPARE] Preparation du serveur...
-	ssh $(SERVER_USER)@$(SERVER_IP) "chmod -R 755 $(SERVER_PATH) 2>/dev/null || true && mkdir -p $(SERVER_PATH)/src/components $(SERVER_PATH)/src/pages $(SERVER_PATH)/src/utils $(SERVER_PATH)/src/context $(SERVER_PATH)/src/assets $(SERVER_PATH)/public"
+	ssh $(SERVER_USER)@$(SERVER_IP) "chmod -R 755 $(SERVER_PATH) 2>/dev/null || true && mkdir -p $(SERVER_PATH)/src/components $(SERVER_PATH)/src/pages $(SERVER_PATH)/src/utils $(SERVER_PATH)/src/context $(SERVER_PATH)/src/assets $(SERVER_PATH)/public $(SERVER_PATH)/assets"
 	@echo [OK] Serveur pret!
 
 # Synchroniser les fichiers source vers le serveur
 sync: prepare
 	@echo [SYNC] Synchronisation vers $(SERVER_USER)@$(SERVER_IP):$(SERVER_PATH)...
 	scp -r src/* $(SERVER_USER)@$(SERVER_IP):$(SERVER_PATH)/src/
+	scp -r public/* $(SERVER_USER)@$(SERVER_IP):$(SERVER_PATH)/public/
+	scp -r assets/* $(SERVER_USER)@$(SERVER_IP):$(SERVER_PATH)/assets/ 2>/dev/null || true
 	scp package.json package-lock.json $(SERVER_USER)@$(SERVER_IP):$(SERVER_PATH)/
 	scp Dockerfile nginx.conf $(SERVER_USER)@$(SERVER_IP):$(SERVER_PATH)/
 	scp index.html vite.config.js tailwind.config.js postcss.config.js $(SERVER_USER)@$(SERVER_IP):$(SERVER_PATH)/

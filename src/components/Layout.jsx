@@ -35,12 +35,11 @@ const Layout = ({ children }) => {
 
                         {/* Logo Section */}
                         <div className="flex items-center gap-2 shrink-0">
-                            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-indigo-200 shadow-lg">
-                                P
-                            </div>
-                            <h1 className="hidden sm:block text-lg font-bold tracking-tight text-slate-900">
-                                Planning&Notes
-                            </h1>
+                            <img
+                                src="/fulllogoKrono.png"
+                                alt="Krono"
+                                className="h-8 sm:h-9 w-auto"
+                            />
                         </div>
 
                         {/* DESKTOP NAVIGATION - Hidden on Mobile */}
