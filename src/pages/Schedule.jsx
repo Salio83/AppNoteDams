@@ -27,27 +27,14 @@ const Schedule = () => {
         }
     }, []); // Initial load only
 
-    // Gérer ouverture automatique d'événement via URL
+    // Gérer la navigation vers la bonne semaine via URL (sans ouvrir de popup)
     useEffect(() => {
-        if (events.length > 0 && searchParams.get('eventId')) {
-            const eventId = searchParams.get('eventId');
-            // On cherche un événement qui commence à cette heure précise (le param eventId est un timestamp ou similaire)
-            // Ou on peut simplement passer le titre et la date
-            const targetDate = searchParams.get('date') ? new Date(searchParams.get('date')) : null;
-
-            if (targetDate) {
-                const match = events.find(e =>
-                    e.start.getTime() === targetDate.getTime()
-                );
-                if (match) {
-                    setSelectedEvent(match);
-
-                    // S'assurer que la vue est centrée sur cette semaine (déjà fait par le useState initial normalement, mais au cas où)
-                    const diff = match.start.getTime() - currentDate.getTime();
-                    if (Math.abs(diff) > 7 * 24 * 3600 * 1000) {
-                        setCurrentDate(new Date(match.start));
-                    }
-                }
+        if (events.length > 0 && searchParams.get('date')) {
+            const targetDate = new Date(searchParams.get('date'));
+            // S'assurer que la vue est centrée sur cette semaine
+            const diff = targetDate.getTime() - currentDate.getTime();
+            if (Math.abs(diff) > 7 * 24 * 3600 * 1000) {
+                setCurrentDate(targetDate);
             }
         }
     }, [events, searchParams]);
@@ -221,7 +208,7 @@ const Schedule = () => {
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                             </button>
                             <button onClick={handleToday} className="px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-white hover:shadow-sm rounded transition-all">
-                                Aujourd'hui
+                                {weekStart.getDate()} - {weekEnd.getDate()} {weekEnd.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '')}
                             </button>
                             <button onClick={handleNextWeek} className="p-1 hover:bg-white hover:shadow-sm rounded transition-all text-slate-600">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
@@ -255,6 +242,7 @@ const Schedule = () => {
             <MobileDayView
                 weekStart={weekStart}
                 processedEventsByDay={processedEventsByDay}
+                initialDate={currentDate}
             />
 
             {/* Desktop Week Grid */}
@@ -423,13 +411,29 @@ const Schedule = () => {
 };
 
 // Mobile Day View Component
-const MobileDayView = ({ weekStart, processedEventsByDay }) => {
+const MobileDayView = ({ weekStart, processedEventsByDay, initialDate }) => {
     const [selectedDayIndex, setSelectedDayIndex] = useState(() => {
-        // Start with today if it's a weekday, otherwise Monday
+        // Si une date initiale est fournie (redirection depuis un examen), l'utiliser
+        if (initialDate) {
+            const dayOfWeek = initialDate.getDay();
+            // Convertir: dimanche=0 -> -1, lundi=1 -> 0, etc.
+            const index = dayOfWeek >= 1 && dayOfWeek <= 5 ? dayOfWeek - 1 : 0;
+            return index;
+        }
+        // Sinon, utiliser aujourd'hui si c'est un jour de semaine
         const today = new Date().getDay();
         return today >= 1 && today <= 5 ? today - 1 : 0;
     });
     const [selectedEvent, setSelectedEvent] = useState(null);
+
+    // Mettre à jour le jour sélectionné quand initialDate change (navigation depuis un examen)
+    useEffect(() => {
+        if (initialDate) {
+            const dayOfWeek = initialDate.getDay();
+            const index = dayOfWeek >= 1 && dayOfWeek <= 5 ? dayOfWeek - 1 : 0;
+            setSelectedDayIndex(index);
+        }
+    }, [initialDate]);
 
     const MOBILE_WEEK_DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'];
 
