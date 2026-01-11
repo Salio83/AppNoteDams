@@ -3,6 +3,9 @@
         "id": 101,
         "category": "UE ENTREPRISE ET CULTURE PROFESSIONNELLE",
         "nom": "Culture économique et sociétale",
+        "aliases": [
+            "Culture éco"
+        ],
         "coef_ue": 2
     },
     {
@@ -21,12 +24,19 @@
         "id": 104,
         "category": "UE ENTREPRISE ET CULTURE PROFESSIONNELLE",
         "nom": "Langue et culture : Anglais 3A",
+        "aliases": [
+            "Anglais"
+        ],
         "coef_ue": 2
     },
     {
         "id": 105,
         "category": "UE ENTREPRISE ET CULTURE PROFESSIONNELLE",
         "nom": "Techniques de gestion de projets informatiques",
+        "aliases": [
+            "Gestion de projet",
+            "Gestion projet"
+        ],
         "coef_ue": 1.5
     },
     {
@@ -57,12 +67,18 @@
         "id": 205,
         "category": "UE INTRODUCTION A LA PROGRAMMATION SYSTEME",
         "nom": "Programmation en C",
+        "aliases": [
+            "Prog. C"
+        ],
         "coef_ue": 1
     },
     {
         "id": 206,
         "category": "UE INTRODUCTION A LA PROGRAMMATION SYSTEME",
         "nom": "Projet C",
+        "aliases": [
+            "Projet C"
+        ],
         "coef_ue": 1.5
     },
     {
@@ -75,12 +91,18 @@
         "id": 301,
         "category": "UE FONDEMENTS MATHEMATIQUES DE LA SCIENCE DES DONNEES",
         "nom": "Optimisation pour la science des données",
+        "aliases": [
+            "Optim science données"
+        ],
         "coef_ue": 2
     },
     {
         "id": 302,
         "category": "UE FONDEMENTS MATHEMATIQUES DE LA SCIENCE DES DONNEES",
         "nom": "Bonnes pratiques de R et visualisation de données",
+        "aliases": [
+            "R et Data Viz"
+        ],
         "coef_ue": 0.5
     },
     {
@@ -111,30 +133,190 @@
         "id": 402,
         "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
         "nom": "Fondamentaux Base de Données relationelles",
+        "aliases": [
+            "Fondamentaux BD relat",
+            "BD relat"
+        ],
         "coef_ue": 1
     },
     {
         "id": 403,
         "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
         "nom": "Algorithmique, Structures de données et Types abstraits 1",
+        "aliases": [
+            "Algo.et Types abstrait"
+        ],
         "coef_ue": 2.5
     },
     {
         "id": 404,
         "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
         "nom": "Projet algorithmique & programmation",
+        "aliases": [
+            "Projet Algo"
+        ],
         "coef_ue": 2
     },
     {
         "id": 405,
         "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
         "nom": "Analyse et conception des Systèmes d'information",
+        "aliases": [
+            "ACSI"
+        ],
         "coef_ue": 1.5
     },
     {
         "id": 406,
         "category": "UE MODELISATION ALGORITHMIQUE ET SYSTEMES D'INFORMATION",
         "nom": "Transition Ecologique & Développement Soutenable",
+        "aliases": [
+            "DDRS"
+        ],
         "coef_ue": 1
+    },
+    {
+        "id": 601,
+        "category": "UE ARCHITECTURE DES APPLICATIONS WEB ET RÉSEAUX",
+        "nom": "Python et qualité logicielle",
+        "coef_ue": 1
+    },
+    {
+        "id": 602,
+        "category": "UE ARCHITECTURE DES APPLICATIONS WEB ET RÉSEAUX",
+        "nom": "Introduction aux architectures Web",
+        "coef_ue": 3
+    },
+    {
+        "id": 603,
+        "category": "UE ARCHITECTURE DES APPLICATIONS WEB ET RÉSEAUX",
+        "nom": "Projet Web",
+        "coef_ue": 0
+    },
+    {
+        "id": 600,
+        "category": "UE ARCHITECTURE DES APPLICATIONS WEB ET RÉSEAUX",
+        "nom": "Fondamentaux des applications réseaux",
+        "coef_ue": 2
+    },
+    {
+        "id": 604,
+        "category": "UE ARCHITECTURE DES APPLICATIONS WEB ET RÉSEAUX",
+        "nom": "Expérience utilisateur",
+        "coef_ue": 0.5
+    },
+    {
+        "id": 605,
+        "category": "UE ARCHITECTURE DES APPLICATIONS WEB ET RÉSEAUX",
+        "nom": "Docker et Compose",
+        "coef_ue": 1
+    },
+    {
+        "id": 606,
+        "category": "UE ARCHITECTURE DES APPLICATIONS WEB ET RÉSEAUX",
+        "nom": "Base de Données relationnelles avancées",
+        "coef_ue": 1.5
+    },
+    {
+        "id": 612,
+        "category": "UE ALGORITHMIQUE ET CONCEPTION ORIENTÉE OBJET",
+        "nom": "Graphes et algorithmique",
+        "coef_ue": 1.5
+    },
+    {
+        "id": 610,
+        "category": "UE ALGORITHMIQUE ET CONCEPTION ORIENTÉE OBJET",
+        "nom": "Algorithmique, Structures de données et Types abstraits 1",
+        "coef_ue": 2.5
+    },
+    {
+        "id": 611,
+        "category": "UE ALGORITHMIQUE ET CONCEPTION ORIENTÉE OBJET",
+        "nom": "Langages, Automates et Expressions régulières",
+        "coef_ue": 1
+    },
+    {
+        "id": 614,
+        "category": "UE ALGORITHMIQUE ET CONCEPTION ORIENTÉE OBJET",
+        "nom": "Bases Machine Learning et IA génératives (LLM)",
+        "coef_ue": 0.5
+    },
+    {
+        "id": 613,
+        "category": "UE ALGORITHMIQUE ET CONCEPTION ORIENTÉE OBJET",
+        "nom": "Introduction à la conception et la programmation par objets",
+        "coef_ue": 3.5
+    },
+    {
+        "id": 630,
+        "category": "UE EXPRESSION ET COMMUNICATION PROFESSIONNELLE",
+        "nom": "Préparation TOEIC 3A",
+        "coef_ue": 0
+    },
+    {
+        "id": 631,
+        "category": "UE EXPRESSION ET COMMUNICATION PROFESSIONNELLE",
+        "nom": "Langue et culture : Anglais 3A",
+        "coef_ue": 1
+    },
+    {
+        "id": 632,
+        "category": "UE EXPRESSION ET COMMUNICATION PROFESSIONNELLE",
+        "nom": "Communication orale",
+        "coef_ue": 1
+    },
+    {
+        "id": 633,
+        "category": "UE EXPRESSION ET COMMUNICATION PROFESSIONNELLE",
+        "nom": "Communication écrite",
+        "coef_ue": 1
+    },
+    {
+        "id": 620,
+        "category": "UE MANAGEMENT DES ORGANISATIONS",
+        "nom": "Analyse de données multidimensionnelles",
+        "coef_ue": 2
+    },
+    {
+        "id": 621,
+        "category": "UE MANAGEMENT DES ORGANISATIONS",
+        "nom": "Formation Compétences Transversales",
+        "coef_ue": 0
+    },
+    {
+        "id": 623,
+        "category": "UE MANAGEMENT DES ORGANISATIONS",
+        "nom": "Projet enquête RH",
+        "coef_ue": 1
+    },
+    {
+        "id": 625,
+        "category": "UE MANAGEMENT DES ORGANISATIONS",
+        "nom": "Jeux et soft skill",
+        "coef_ue": 0
+    },
+    {
+        "id": 626,
+        "category": "UE MANAGEMENT DES ORGANISATIONS",
+        "nom": "Expérience Professionnelle Pro",
+        "coef_ue": 0
+    },
+    {
+        "id": 627,
+        "category": "UE MANAGEMENT DES ORGANISATIONS",
+        "nom": "Théorie des organisations",
+        "coef_ue": 2
+    },
+    {
+        "id": 622,
+        "category": "UE MANAGEMENT DES ORGANISATIONS",
+        "nom": "Enquête RH",
+        "coef_ue": 1
+    },
+    {
+        "id": 624,
+        "category": "UE MANAGEMENT DES ORGANISATIONS",
+        "nom": "Contrôle de gestion",
+        "coef_ue": 3
     }
 ]

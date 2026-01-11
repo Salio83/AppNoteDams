@@ -1,125 +1,100 @@
 import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, GraduationCap, Calendar, UserCircle, BookOpen, AlertTriangle, Clock, LogOut, Menu, X } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { LayoutDashboard, GraduationCap, Calendar, UserCircle, BookOpen, AlertTriangle, Clock, ClipboardList, CalendarDays } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../context/AuthContext';
 
-const SidebarItem = ({ to, icon: Icon, label, onClick }) => (
+const NavItem = ({ to, icon: Icon, label }) => (
     <NavLink
         to={to}
-        onClick={onClick}
         className={({ isActive }) =>
             clsx(
-                'flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200',
+                'flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 group',
                 isActive
                     ? 'bg-slate-900 text-white shadow-md'
                     : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
             )
         }
+        title={label}
     >
-        <Icon className="w-[18px] h-[18px]" />
-        <span>{label}</span>
+        <Icon className="w-5 h-5 flex-shrink-0" />
+        <span className="hidden lg:block text-sm font-medium whitespace-nowrap">{label}</span>
     </NavLink>
 );
 
 const Layout = ({ children }) => {
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-    const handleLogout = async () => {
-        await logout();
-        navigate('/login');
-    };
-
-    const closeSidebar = () => {
-        setIsSidebarOpen(false);
-    };
+    const { user } = useAuth();
+    // Removed isSidebarOpen state and logic as we are moving to a horizontal navbar
 
     return (
-        <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
-            {/* Mobile Header */}
-            <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 z-30 flex items-center justify-between px-4">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-indigo-200 shadow-lg">
-                        P
-                    </div>
-                    <h1 className="text-lg font-bold tracking-tight text-slate-900">
-                        Planning&Notes
-                    </h1>
-                </div>
-                <button
-                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                    {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                </button>
-            </header>
+        <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
+            {/* Top Navigation Bar */}
+            <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 transition-all duration-300">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex h-16 items-center justify-between gap-4">
 
-            {/* Mobile Overlay */}
-            {isSidebarOpen && (
-                <div
-                    className="lg:hidden fixed inset-0 bg-black/50 z-30"
-                    onClick={closeSidebar}
-                />
-            )}
-
-            {/* Sidebar */}
-            <aside className={clsx(
-                "bg-white/80 backdrop-blur-xl border-r border-slate-200/60 flex flex-col fixed h-full z-40 transition-all duration-300",
-                "w-72 lg:translate-x-0",
-                isSidebarOpen ? "translate-x-0" : "-translate-x-full",
-                "top-0 lg:top-0"
-            )}>
-                <div className="p-6 lg:p-8">
-                    <div className="flex items-center gap-2 mb-1">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-indigo-200 shadow-lg">
-                            P
+                        {/* Logo Section */}
+                        <div className="flex items-center gap-2 shrink-0">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-indigo-200 shadow-lg">
+                                P
+                            </div>
+                            <h1 className="hidden sm:block text-lg font-bold tracking-tight text-slate-900">
+                                Planning&Notes
+                            </h1>
                         </div>
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900">
-                            Planning&Notes
-                        </h1>
-                    </div>
-                    <p className="text-xs text-slate-400 pl-10 font-medium tracking-wide uppercase">Tableau de bord</p>
-                </div>
 
-                <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-                    <SidebarItem to="/" icon={Calendar} label="Emploi du Temps" onClick={closeSidebar} />
-                    <SidebarItem to="/dashboard" icon={LayoutDashboard} label="Aperçu Général" onClick={closeSidebar} />
-                    <SidebarItem to="/grades" icon={GraduationCap} label="Mes Notes" onClick={closeSidebar} />
-                    <SidebarItem to="/averages" icon={BookOpen} label="Moyennes" onClick={closeSidebar} />
-                    <SidebarItem to="/exams" icon={AlertTriangle} label="Examens" onClick={closeSidebar} />
-                    <SidebarItem to="/hours" icon={Clock} label="Heures restantes" onClick={closeSidebar} />
-                </nav>
+                        {/* DESKTOP NAVIGATION - Hidden on Mobile */}
+                        <div className="hidden lg:flex flex-1 items-center justify-end gap-1">
+                            <NavItem to="/" icon={Calendar} label="Emploi du Temps" />
+                            <NavItem to="/dashboard" icon={LayoutDashboard} label="Aperçu" />
+                            <NavItem to="/grades" icon={GraduationCap} label="Notes" />
+                            <NavItem to="/averages" icon={BookOpen} label="Moyennes" />
+                            <NavItem to="/exams" icon={AlertTriangle} label="Examens" />
+                            <NavItem to="/hours" icon={Clock} label="Heures" />
+                            <NavItem to="/tasks" icon={ClipboardList} label="Tâches" />
+                            <NavItem to="/calendar" icon={CalendarDays} label="Calendrier" />
+                        </div>
 
-
-                <div className="p-4 m-4 rounded-2xl bg-slate-50 border border-slate-100">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                        {/* Profile Link */}
+                        <NavLink
+                            to="/profile"
+                            className={({ isActive }) =>
+                                clsx(
+                                    'flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 shrink-0 border border-slate-200',
+                                    isActive
+                                        ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                                        : 'bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                )
+                            }
+                            title="Mon Profil"
+                        >
                             <UserCircle className="w-6 h-6" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-slate-800 truncate">
-                                {user?.email?.split('@')[0] || 'Utilisateur'}
-                            </p>
-                            <p className="text-xs text-slate-500 truncate">{user?.email}</p>
-                        </div>
+                        </NavLink>
                     </div>
-                    <button
-                        onClick={handleLogout}
-                        className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        Déconnexion
-                    </button>
                 </div>
-            </aside>
+            </nav>
+
+            {/* MOBILE BOTTOM NAVIGATION BAR */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-safe">
+                <div className="flex justify-around items-end h-16 px-2 pb-2">
+                    <NavLink to="/dashboard" className={({ isActive }) => clsx("flex flex-col items-center justify-center w-full pb-1 gap-1 transition-colors", isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-600")}><LayoutDashboard className="w-6 h-6" /><span className="text-[10px] font-medium">Aperçu</span></NavLink>
+                    <NavLink to="/grades" className={({ isActive }) => clsx("flex flex-col items-center justify-center w-full pb-1 gap-1 transition-colors", isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-600")}><GraduationCap className="w-6 h-6" /><span className="text-[10px] font-medium">Notes</span></NavLink>
+
+                    {/* Center Action Button - Planning */}
+                    <div className="relative -top-5 w-full flex justify-center pointer-events-none">
+                        <NavLink to="/" className={({ isActive }) => clsx("pointer-events-auto flex flex-col items-center justify-center w-14 h-14 rounded-full shadow-lg shadow-indigo-200 border-4 border-slate-50 transition-transform active:scale-95", isActive ? "bg-indigo-600 text-white" : "bg-indigo-500 text-white hover:bg-indigo-600")}>
+                            <Calendar className="w-7 h-7" />
+                        </NavLink>
+                    </div>
+
+                    <NavLink to="/exams" className={({ isActive }) => clsx("flex flex-col items-center justify-center w-full pb-1 gap-1 transition-colors", isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-600")}><AlertTriangle className="w-6 h-6" /><span className="text-[10px] font-medium">Examens</span></NavLink>
+                    <NavLink to="/averages" className={({ isActive }) => clsx("flex flex-col items-center justify-center w-full pb-1 gap-1 transition-colors", isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-600")}><BookOpen className="w-6 h-6" /><span className="text-[10px] font-medium">Moy</span></NavLink>
+                </div>
+            </div>
 
             {/* Main Content */}
-            <main className="flex-1 lg:ml-72 pt-16 lg:pt-0">
-                <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-12">
-                    {children}
-                </div>
+            <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+                {children}
             </main>
         </div>
     );

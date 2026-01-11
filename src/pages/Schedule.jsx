@@ -1,24 +1,56 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import ICAL from 'ical.js';
-import { RefreshCw, AlertCircle } from 'lucide-react';
+import { RefreshCw, AlertCircle, CalendarDays, ClipboardList, Clock } from 'lucide-react';
 import { getEventColor } from '../utils/colors';
 
 const WEEK_DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
 const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 08:00 to 20:00
 
 const Schedule = () => {
+    const [searchParams] = useSearchParams();
     // Default URL pointing to the proxy path if needed, but user might paste full URL.
     const [url, setUrl] = useState(localStorage.getItem('schedule_url') || 'https://proseconsult.umontpellier.fr/jsp/custom/modules/plannings/direct_cal.jsp?data=58c99062bab31d256bee14356aca3f2423c0f022cb9660eba051b2653be722c4255dc57febc36bcda019d951db547ac9dc5c094f7d1a811b903031bde802c7f52fd380b992d3771de6139e0d9278c8e91aa43e5f4eeaa642fb89a601c5d38bdb242c572c6bf1cac3537c3eed8f7cb4820cecc4c4c9f5d60f651b1c48c2fe7b06,1');
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [currentDate, setCurrentDate] = useState(new Date());
+    const [currentDate, setCurrentDate] = useState(() => {
+        // Si une date est passée en paramètre, l'utiliser
+        const dateParam = searchParams.get('date');
+        return dateParam ? new Date(dateParam) : new Date();
+    });
+    const [selectedEvent, setSelectedEvent] = useState(null);
 
     useEffect(() => {
         if (url) {
             loadSchedule();
         }
     }, []); // Initial load only
+
+    // Gérer ouverture automatique d'événement via URL
+    useEffect(() => {
+        if (events.length > 0 && searchParams.get('eventId')) {
+            const eventId = searchParams.get('eventId');
+            // On cherche un événement qui commence à cette heure précise (le param eventId est un timestamp ou similaire)
+            // Ou on peut simplement passer le titre et la date
+            const targetDate = searchParams.get('date') ? new Date(searchParams.get('date')) : null;
+
+            if (targetDate) {
+                const match = events.find(e =>
+                    e.start.getTime() === targetDate.getTime()
+                );
+                if (match) {
+                    setSelectedEvent(match);
+
+                    // S'assurer que la vue est centrée sur cette semaine (déjà fait par le useState initial normalement, mais au cas où)
+                    const diff = match.start.getTime() - currentDate.getTime();
+                    if (Math.abs(diff) > 7 * 24 * 3600 * 1000) {
+                        setCurrentDate(new Date(match.start));
+                    }
+                }
+            }
+        }
+    }, [events, searchParams]);
 
     const loadSchedule = async () => {
         if (!url) return;
@@ -164,6 +196,22 @@ const Schedule = () => {
 
     return (
         <div className="space-y-4 h-[calc(100vh-6rem)] lg:h-[calc(100vh-6rem)] flex flex-col">
+            {/* Mobile Shortcuts */}
+            <div className="grid grid-cols-3 gap-3 md:hidden">
+                <Link to="/calendar" className="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors">
+                    <CalendarDays className="w-5 h-5 text-indigo-500 mb-1" />
+                    <span className="text-xs font-medium text-slate-700">Calendrier</span>
+                </Link>
+                <Link to="/tasks" className="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors">
+                    <ClipboardList className="w-5 h-5 text-emerald-500 mb-1" />
+                    <span className="text-xs font-medium text-slate-700">Tâches</span>
+                </Link>
+                <Link to="/hours" className="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors">
+                    <Clock className="w-5 h-5 text-amber-500 mb-1" />
+                    <span className="text-xs font-medium text-slate-700">Heures</span>
+                </Link>
+            </div>
+
             <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 shrink-0">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">Emploi du temps</h2>
@@ -184,18 +232,12 @@ const Schedule = () => {
                         </p>
                     </div>
                 </div>
-                <div className="flex gap-2 items-center w-full md:max-w-sm">
-                    <input
-                        type="text"
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
-                        placeholder="URL .ics"
-                        className="flex-1 rounded-lg border-gray-300 shadow-sm text-sm p-2 border"
-                    />
+                <div>
                     <button
                         onClick={loadSchedule}
                         disabled={loading}
-                        className="p-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:opacity-50"
+                        className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors disabled:opacity-50"
+                        title="Actualiser l'emploi du temps"
                     >
                         <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                     </button>
@@ -265,6 +307,7 @@ const Schedule = () => {
                                             return (
                                                 <div
                                                     key={idx}
+                                                    onClick={() => setSelectedEvent(evt)}
                                                     className={`absolute ${colors.bg} border ${colors.border} ${colors.text} rounded-lg p-1.5 text-xs overflow-hidden hover:z-20 hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer group flex flex-col`}
                                                     title={`${evt.title}\n${evt.location}`}
                                                     style={{
@@ -289,6 +332,92 @@ const Schedule = () => {
                     ))}
                 </div>
             </div>
+
+            {/* Event Detail Modal (Desktop) */}
+            {selectedEvent && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn"
+                    onClick={() => setSelectedEvent(null)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className={`p-4 ${getEventColor(selectedEvent.title).bg} ${getEventColor(selectedEvent.title).border} border-b`}>
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                    <h3 className={`font-bold text-lg ${getEventColor(selectedEvent.title).text}`}>
+                                        {selectedEvent.title}
+                                    </h3>
+                                    <p className={`text-sm opacity-80 ${getEventColor(selectedEvent.title).text}`}>
+                                        {selectedEvent.start.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedEvent(null)}
+                                    className="p-2 hover:bg-white/30 rounded-lg transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-5 space-y-4">
+                            {/* Horaires */}
+                            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-slate-800">
+                                        {selectedEvent.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - {selectedEvent.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                    <p className="text-sm text-slate-500">
+                                        Durée: {Math.floor((selectedEvent.end - selectedEvent.start) / (1000 * 60 * 60))}h{((selectedEvent.end - selectedEvent.start) / (1000 * 60)) % 60 > 0 ? `${((selectedEvent.end - selectedEvent.start) / (1000 * 60)) % 60}min` : ''}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Lieu */}
+                            {selectedEvent.location && (
+                                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-slate-800">Salle</p>
+                                        <p className="text-sm text-slate-500">{selectedEvent.location}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Description / Prof */}
+                            {selectedEvent.description && (
+                                <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+                                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+                                        <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-slate-800">Informations</p>
+                                        <p className="text-sm text-slate-500 whitespace-pre-wrap break-words">{selectedEvent.description}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -300,6 +429,7 @@ const MobileDayView = ({ weekStart, processedEventsByDay }) => {
         const today = new Date().getDay();
         return today >= 1 && today <= 5 ? today - 1 : 0;
     });
+    const [selectedEvent, setSelectedEvent] = useState(null);
 
     const MOBILE_WEEK_DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'];
 
@@ -311,6 +441,20 @@ const MobileDayView = ({ weekStart, processedEventsByDay }) => {
 
     const dayEvents = processedEventsByDay[selectedDayIndex] || [];
     const sortedEvents = [...dayEvents].sort((a, b) => a.start - b.start);
+
+    // Extraire les infos du prof depuis la description
+    const extractProfessor = (description) => {
+        if (!description) return null;
+        // Chercher le pattern courant dans les descriptions iCal
+        const lines = description.split('\n');
+        for (const line of lines) {
+            if (line.toLowerCase().includes('prof') || line.toLowerCase().includes('enseignant')) {
+                return line.replace(/^[^:]+:\s*/, '').trim();
+            }
+        }
+        // Sinon retourner la première ligne non vide comme fallback
+        return lines.find(l => l.trim().length > 0) || null;
+    };
 
     return (
         <div className="lg:hidden flex-1 flex flex-col min-h-0">
@@ -327,10 +471,10 @@ const MobileDayView = ({ weekStart, processedEventsByDay }) => {
                             key={day}
                             onClick={() => setSelectedDayIndex(index)}
                             className={`flex-1 py-2 px-1 rounded-lg text-center transition-all relative ${isSelected
-                                    ? 'bg-white shadow-sm text-slate-900'
-                                    : isToday
-                                        ? 'text-blue-600'
-                                        : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-white shadow-sm text-slate-900'
+                                : isToday
+                                    ? 'text-blue-600'
+                                    : 'text-slate-500 hover:text-slate-700'
                                 }`}
                         >
                             <div className={`text-xs font-semibold ${isSelected ? 'text-slate-900' : ''}`}>{day}</div>
@@ -364,7 +508,8 @@ const MobileDayView = ({ weekStart, processedEventsByDay }) => {
                         return (
                             <div
                                 key={idx}
-                                className={`${colors.bg} border ${colors.border} rounded-xl p-4 ${colors.text}`}
+                                onClick={() => setSelectedEvent(evt)}
+                                className={`${colors.bg} border ${colors.border} rounded-xl p-4 ${colors.text} cursor-pointer hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all`}
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex-1 min-w-0">
@@ -382,12 +527,99 @@ const MobileDayView = ({ weekStart, processedEventsByDay }) => {
                                     <span>
                                         Durée: {durationHours > 0 ? `${durationHours}h` : ''}{durationMins > 0 ? `${durationMins}min` : ''}
                                     </span>
+                                    <span className="text-[10px] opacity-60">Appuyez pour détails →</span>
                                 </div>
                             </div>
                         );
                     })
                 )}
             </div>
+
+            {/* Event Detail Modal */}
+            {selectedEvent && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn"
+                    onClick={() => setSelectedEvent(null)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className={`p-4 ${getEventColor(selectedEvent.title).bg} ${getEventColor(selectedEvent.title).border} border-b`}>
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                    <h3 className={`font-bold text-lg ${getEventColor(selectedEvent.title).text}`}>
+                                        {selectedEvent.title}
+                                    </h3>
+                                    <p className={`text-sm opacity-80 ${getEventColor(selectedEvent.title).text}`}>
+                                        {selectedEvent.start.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedEvent(null)}
+                                    className="p-2 hover:bg-white/30 rounded-lg transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-5 space-y-4">
+                            {/* Horaires */}
+                            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-slate-800">
+                                        {selectedEvent.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - {selectedEvent.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                    <p className="text-sm text-slate-500">
+                                        Durée: {Math.floor((selectedEvent.end - selectedEvent.start) / (1000 * 60 * 60))}h{((selectedEvent.end - selectedEvent.start) / (1000 * 60)) % 60 > 0 ? `${((selectedEvent.end - selectedEvent.start) / (1000 * 60)) % 60}min` : ''}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Lieu */}
+                            {selectedEvent.location && (
+                                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-slate-800">Salle</p>
+                                        <p className="text-sm text-slate-500">{selectedEvent.location}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Description / Prof */}
+                            {selectedEvent.description && (
+                                <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+                                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+                                        <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-slate-800">Informations</p>
+                                        <p className="text-sm text-slate-500 whitespace-pre-wrap break-words">{selectedEvent.description}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
