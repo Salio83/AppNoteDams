@@ -59,20 +59,38 @@ const SearchBar = () => {
 
         if (!foundUE) return null;
 
-        // Extract keywords from subject name for better matching
-        // e.g., "Culture économique et sociétale" => ["culture", "économique", "sociétale"]
-        // e.g., "Projet algorithmique" => ["projet", "algo"]
-        const nameToSearch = foundMatiere ? foundMatiere.nom : foundUE.nom;
-        const keywords = nameToSearch.toLowerCase()
-            .replace(/['']/g, ' ')
-            .split(/[\s,.-]+/)
-            .filter(w => w.length > 3 && !['pour', 'avec', 'dans', 'les', 'des', 'une'].includes(w));
+        // Get the subject with its aliases
+        const subject = foundMatiere || foundUE;
+        const nameToSearch = subject.nom;
+        const aliases = subject.aliases || [];
 
-        // Helper to check if event matches subject
+        // Build search terms: use aliases first, then distinctive keywords from name
+        let searchTerms = aliases.map(a => a.toLowerCase());
+
+        // Extract distinctive keywords (5+ chars, excluding common words)
+        const commonWords = ['pour', 'avec', 'dans', 'introduction', 'projet', 'analyse', 'fondamentaux'];
+        const nameKeywords = nameToSearch.toLowerCase()
+            .replace(/[''&]/g, ' ')
+            .split(/[\s,.-]+/)
+            .filter(w => w.length >= 5 && !commonWords.includes(w))
+            .sort((a, b) => b.length - a.length); // Longest first
+
+        // Add top 2 most distinctive keywords
+        searchTerms.push(...nameKeywords.slice(0, 2));
+
+        // Fallback: first word if no good keywords
+        if (searchTerms.length === 0) {
+            const firstWord = nameToSearch.split(/[\s,.-]+/)[0].toLowerCase();
+            if (firstWord.length >= 5) searchTerms.push(firstWord);
+        }
+
+        // Helper to check if event matches subject - require 5+ char match
         const matchesSubject = (eventTitle) => {
-            const title = (eventTitle || '').toLowerCase();
-            // Match if at least one significant keyword is found
-            return keywords.some(keyword => title.includes(keyword.substring(0, 4)));
+            const title = (eventTitle || '').toLowerCase().replace(/[''&]/g, ' ');
+            return searchTerms.some(term => {
+                const matchLen = Math.min(term.length, 5);
+                return title.includes(term.substring(0, matchLen));
+            });
         };
 
         // Find next course for this subject
