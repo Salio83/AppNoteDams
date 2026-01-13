@@ -102,59 +102,59 @@ const Averages = () => {
     return (
         <div className="space-y-8">
             <header>
-                <h2 className="text-2xl font-bold text-slate-800">Moyennes Détaillées</h2>
-                <p className="text-slate-500">Vue d'ensemble par Unité d'Enseignement</p>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Moyennes Détaillées</h2>
+                <p className="text-slate-500 dark:text-slate-400">Vue d'ensemble par Unité d'Enseignement</p>
             </header>
 
             <div className="grid gap-8">
                 {groupedData.map((group) => (
-                    <div key={group.category} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div className="bg-slate-50/50 p-6 border-b border-slate-100 flex justify-between items-center">
-                            <h3 className="font-bold text-slate-700 text-lg flex items-center gap-2">
+                    <div key={group.category} className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+                        <div className="bg-slate-50/50 dark:bg-slate-700/50 p-6 border-b border-slate-100 dark:border-slate-600 flex justify-between items-center">
+                            <h3 className="font-bold text-slate-700 dark:text-slate-200 text-lg flex items-center gap-2">
                                 <BookOpen className="w-5 h-5 text-indigo-500" />
                                 {group.category}
                             </h3>
                             <div className="flex items-center gap-3">
-                                <span className="text-sm font-medium text-slate-400 uppercase tracking-wider">Moyenne UE</span>
-                                <span className={`text-xl font-bold px-3 py-1 rounded-lg ${group.ueAverage === null ? 'bg-slate-100 text-slate-400' :
-                                    group.ueAverage >= 10 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                                <span className="text-sm font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Moyenne UE</span>
+                                <span className={`text-xl font-bold px-3 py-1 rounded-lg ${group.ueAverage === null ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500' :
+                                    group.ueAverage >= 10 ? 'bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400'
                                     }`}>
                                     {group.ueAverage !== null ? group.ueAverage : '-'}
                                 </span>
                             </div>
                         </div>
 
-                        <div className="divide-y divide-slate-50">
+                        <div className="divide-y divide-slate-50 dark:divide-slate-700">
                             {group.subjects.map(subject => (
-                                <div key={subject.id} className="p-5 hover:bg-slate-50/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div key={subject.id} className="p-5 hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <h4 className="font-medium text-slate-800">{subject.nom}</h4>
-                                            <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-500 rounded font-medium border border-slate-200">
+                                            <h4 className="font-medium text-slate-800 dark:text-slate-200">{subject.nom}</h4>
+                                            <span className="text-[10px] px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded font-medium border border-slate-200 dark:border-slate-600">
                                                 Coef {subject.coef_ue}
                                             </span>
                                         </div>
                                         <div className="flex gap-2 flex-wrap">
                                             {subject.grades.map(g => (
-                                                <span key={g.id} className={`text-xs px-2 py-1 rounded border ${g.value >= 10 ? 'bg-white border-emerald-100 text-emerald-700' : 'bg-white border-rose-100 text-rose-700'
+                                                <span key={g.id} className={`text-xs px-2 py-1 rounded border ${g.value >= 10 ? 'bg-white dark:bg-emerald-900/30 border-emerald-100 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400' : 'bg-white dark:bg-rose-900/30 border-rose-100 dark:border-rose-800 text-rose-700 dark:text-rose-400'
                                                     }`}>
-                                                    {g.value} <span className="text-slate-300 mx-0.5">|</span> <span className="text-slate-400">x{g.coef}</span>
+                                                    {g.value} <span className="text-slate-300 dark:text-slate-600 mx-0.5">|</span> <span className="text-slate-400 dark:text-slate-500">x{g.coef}</span>
                                                 </span>
                                             ))}
                                             {subject.grades.length === 0 && (
-                                                <span className="text-xs text-slate-400 italic">Aucune note</span>
+                                                <span className="text-xs text-slate-400 dark:text-slate-500 italic">Aucune note</span>
                                             )}
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-4 sm:border-l sm:border-slate-100 sm:pl-6 shrink-0 min-w-[100px] justify-end">
+                                    <div className="flex items-center gap-4 sm:border-l sm:border-slate-100 dark:sm:border-slate-700 sm:pl-6 shrink-0 min-w-[100px] justify-end">
                                         <div className="text-right">
-                                            <div className={`text-lg font-bold ${subject.average === null ? 'text-slate-200' :
-                                                subject.average >= 10 ? 'text-emerald-600' : 'text-rose-500'
+                                            <div className={`text-lg font-bold ${subject.average === null ? 'text-slate-200 dark:text-slate-600' :
+                                                subject.average >= 10 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'
                                                 }`}>
                                                 {subject.average !== null ? subject.average : '--'}
                                             </div>
-                                            <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Moyenne</div>
+                                            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide">Moyenne</div>
                                         </div>
                                     </div>
                                 </div>

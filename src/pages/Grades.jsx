@@ -162,24 +162,24 @@ const Grades = () => {
     return (
         <div className="space-y-6">
             <header>
-                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
                     <GraduationCap className="w-6 h-6 text-indigo-500" />
                     Gestion des Notes
                 </h2>
-                <p className="text-gray-500">Appuyez sur une UE pour voir le détail des matières</p>
+                <p className="text-gray-500 dark:text-gray-400">Appuyez sur une UE pour voir le détail des matières</p>
             </header>
 
 
             {/* Formulaire d'ajout */}
-            <form onSubmit={handleAddGrade} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60">
-                <h3 className="font-semibold text-slate-700 mb-4">Ajouter une note</h3>
+            <form onSubmit={handleAddGrade} className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200/60 dark:border-slate-700">
+                <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-4">Ajouter une note</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1.5">Matière</label>
+                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Matière</label>
                         <select
                             value={selectedUE}
                             onChange={(e) => setSelectedUE(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 py-2.5 px-3"
+                            className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 dark:text-slate-200 py-2.5 px-3"
                         >
                             {Object.entries(groupedUEs).map(([category, items]) => (
                                 <optgroup key={category} label={getCategoryShortName(category)}>
@@ -191,7 +191,7 @@ const Grades = () => {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1.5">Note /20</label>
+                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Note /20</label>
                         <input
                             type="number"
                             min="0"
@@ -199,20 +199,20 @@ const Grades = () => {
                             step="0.1"
                             value={grade}
                             onChange={(e) => setGrade(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 py-2.5 px-3"
+                            className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 dark:text-slate-200 py-2.5 px-3"
                             placeholder="15.5"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1.5">Coefficient</label>
+                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Coefficient</label>
                         <input
                             type="number"
                             min="0.1"
                             step="0.1"
                             value={coef}
                             onChange={(e) => setCoef(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 py-2.5 px-3"
+                            className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 dark:text-slate-200 py-2.5 px-3"
                             placeholder="1"
                             required
                         />
@@ -236,17 +236,17 @@ const Grades = () => {
 
             {/* Loading state */}
             {loading ? (
-                <div className="bg-white rounded-2xl p-12 text-center border border-slate-100">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-12 text-center border border-slate-100 dark:border-slate-700">
                     <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mx-auto" />
-                    <p className="text-slate-500 text-sm mt-4">Chargement des notes...</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-4">Chargement des notes...</p>
                 </div>
             ) : grades.length === 0 ? (
-                <div className="bg-white rounded-2xl p-12 text-center border border-slate-100 border-dashed">
-                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <AlertCircle className="w-8 h-8 text-slate-300" />
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-12 text-center border border-slate-100 dark:border-slate-700 border-dashed">
+                    <div className="w-16 h-16 bg-slate-50 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="w-8 h-8 text-slate-300 dark:text-slate-500" />
                     </div>
-                    <h3 className="text-lg font-medium text-slate-900">Aucune note</h3>
-                    <p className="text-slate-500 text-sm mt-1">Commencez par ajouter une nouvelle note ci-dessus.</p>
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">Aucune note</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Commencez par ajouter une nouvelle note ci-dessus.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -311,7 +311,7 @@ const Grades = () => {
                     onClick={() => setSelectedCategory(null)}
                 >
                     <div
-                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-hidden animate-slideUp"
+                        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-hidden animate-slideUp"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
@@ -333,7 +333,7 @@ const Grades = () => {
                                     )}
                                     <button
                                         onClick={() => setSelectedCategory(null)}
-                                        className="p-2 hover:bg-white/30 rounded-lg transition-colors"
+                                        className="p-2 hover:bg-white/30 dark:hover:bg-black/20 rounded-lg transition-colors"
                                     >
                                         <X className="w-5 h-5" />
                                     </button>
@@ -349,12 +349,12 @@ const Grades = () => {
                                 const nextEvent = getNextEventForSubject(ue, allEvents);
 
                                 return (
-                                    <div key={ue.id} className="bg-slate-50 rounded-xl p-4">
+                                    <div key={ue.id} className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4">
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex flex-col">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-medium text-slate-800">{ue.nom}</span>
-                                                    <span className="text-xs text-slate-400 px-1.5 py-0.5 bg-slate-200 rounded">
+                                                    <span className="font-medium text-slate-800 dark:text-slate-100">{ue.nom}</span>
+                                                    <span className="text-xs text-slate-400 dark:text-slate-500 px-1.5 py-0.5 bg-slate-200 dark:bg-slate-600 rounded">
                                                         Coef {ue.coef_ue}
                                                     </span>
                                                 </div>
@@ -362,7 +362,7 @@ const Grades = () => {
                                                 {nextEvent && (
                                                     <Link
                                                         to={`/?date=${new Date(nextEvent.start).toISOString()}&eventId=${new Date(nextEvent.start).getTime()}`}
-                                                        className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium mt-1 w-fit"
+                                                        className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium mt-1 w-fit"
                                                     >
                                                         <Calendar className="w-3 h-3" />
                                                         Prochain cours: {new Date(nextEvent.start).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
@@ -401,7 +401,7 @@ const Grades = () => {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <p className="text-xs text-slate-400 mt-1">Aucune note</p>
+                                            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Aucune note</p>
                                         )}
                                     </div>
                                 );

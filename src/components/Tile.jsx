@@ -60,17 +60,17 @@ const Tile = ({
                     onClick={handleClose}
                 >
                     <div
-                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
+                        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header du modal */}
-                        <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50">
-                            <h3 className="font-bold text-lg text-slate-800">{title || 'Détails'}</h3>
+                        <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                            <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">{title || 'Détails'}</h3>
                             <button
                                 onClick={handleClose}
-                                className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+                                className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
                             >
-                                <X className="w-5 h-5 text-slate-500" />
+                                <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                             </button>
                         </div>
 
@@ -100,10 +100,10 @@ export const TileGrid = ({ children, className = '' }) => (
 export const TileSection = ({ title, icon: Icon, children, className = '' }) => (
     <div className={clsx('mb-4 last:mb-0', className)}>
         <div className="flex items-center gap-2 mb-2">
-            {Icon && <Icon className="w-4 h-4 text-slate-400" />}
-            <h4 className="text-sm font-semibold text-slate-600 uppercase tracking-wide">{title}</h4>
+            {Icon && <Icon className="w-4 h-4 text-slate-400 dark:text-slate-500" />}
+            <h4 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">{title}</h4>
         </div>
-        <div className="text-slate-700">
+        <div className="text-slate-700 dark:text-slate-300">
             {children}
         </div>
     </div>
@@ -113,9 +113,9 @@ export const TileSection = ({ title, icon: Icon, children, className = '' }) => 
  * Composant TileInfo - Ligne d'information dans le modal
  */
 export const TileInfo = ({ label, value, colorClass = '' }) => (
-    <div className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
-        <span className="text-sm text-slate-500">{label}</span>
-        <span className={clsx('font-semibold', colorClass || 'text-slate-800')}>{value}</span>
+    <div className="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-700 last:border-0">
+        <span className="text-sm text-slate-500 dark:text-slate-400">{label}</span>
+        <span className={clsx('font-semibold', colorClass || 'text-slate-800 dark:text-slate-200')}>{value}</span>
     </div>
 );
 

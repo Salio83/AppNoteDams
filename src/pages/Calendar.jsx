@@ -105,11 +105,11 @@ const Calendar = () => {
     return (
         <div className="space-y-6">
             <header>
-                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
                     <CalendarDays className="w-6 h-6 text-teal-500" />
                     Calendrier
                 </h2>
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                     Vacances scolaires (Zone C - Montpellier) et jours fériés
                 </p>
             </header>
@@ -144,8 +144,8 @@ const Calendar = () => {
                 <button
                     onClick={() => setFilter('all')}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all'
-                        ? 'bg-slate-900 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                         }`}
                 >
                     Tous ({allEvents.length})
@@ -154,7 +154,7 @@ const Calendar = () => {
                     onClick={() => setFilter('vacation')}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${filter === 'vacation'
                         ? 'bg-teal-600 text-white'
-                        : 'bg-teal-50 text-teal-600 hover:bg-teal-100'
+                        : 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-900/50'
                         }`}
                 >
                     <Umbrella className="w-4 h-4" />
@@ -164,7 +164,7 @@ const Calendar = () => {
                     onClick={() => setFilter('holiday')}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${filter === 'holiday'
                         ? 'bg-amber-600 text-white'
-                        : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                        : 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50'
                         }`}
                 >
                     <Flag className="w-4 h-4" />
@@ -178,15 +178,15 @@ const Calendar = () => {
                     <div
                         key={event.id}
                         className={`rounded-xl border-2 p-4 transition-all hover:shadow-md ${event.status === 'current'
-                                ? 'bg-emerald-50 border-emerald-300'
-                                : 'bg-white border-slate-200'
+                            ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
                             }`}
                     >
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${event.type === 'vacation'
-                                        ? 'bg-teal-100 text-teal-600'
-                                        : 'bg-amber-100 text-amber-600'
+                                    ? 'bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400'
+                                    : 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400'
                                     }`}>
                                     {event.type === 'vacation'
                                         ? <Umbrella className="w-5 h-5" />
@@ -194,7 +194,7 @@ const Calendar = () => {
                                     }
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-slate-800">
+                                    <h3 className="font-semibold text-slate-800 dark:text-slate-100">
                                         {event.name}
                                         {event.status === 'current' && (
                                             <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-emerald-500 text-white rounded-full">
@@ -202,7 +202,7 @@ const Calendar = () => {
                                             </span>
                                         )}
                                     </h3>
-                                    <p className="text-sm text-slate-500">
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">
                                         {event.start
                                             ? `${new Date(event.start).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} → ${new Date(event.end).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`
                                             : new Date(event.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
@@ -212,13 +212,13 @@ const Calendar = () => {
                             </div>
                             <div className="text-right">
                                 {event.status === 'current' ? (
-                                    <p className="text-lg font-bold text-emerald-600">Maintenant</p>
+                                    <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">Maintenant</p>
                                 ) : (
                                     <>
-                                        <p className="text-xl font-bold text-slate-700">
+                                        <p className="text-xl font-bold text-slate-700 dark:text-slate-200">
                                             J-{event.daysUntilStart ?? event.daysUntil}
                                         </p>
-                                        <p className="text-xs text-slate-400">jours</p>
+                                        <p className="text-xs text-slate-400 dark:text-slate-500">jours</p>
                                     </>
                                 )}
                             </div>
@@ -239,8 +239,8 @@ const Calendar = () => {
             </div>
 
             {/* Note Zone C */}
-            <div className="bg-slate-50 rounded-xl p-4 text-sm text-slate-500">
-                <p className="font-medium text-slate-600 mb-1">📍 Zone C</p>
+            <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 text-sm text-slate-500 dark:text-slate-400">
+                <p className="font-medium text-slate-600 dark:text-slate-300 mb-1">📍 Zone C</p>
                 <p>
                     Académies : Montpellier, Toulouse, Bordeaux, Limoges, Paris, Versailles, Créteil
                 </p>

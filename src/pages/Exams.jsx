@@ -15,10 +15,10 @@ const Exams = () => {
     }, []);
 
     const getUrgencyClass = (daysUntil) => {
-        if (daysUntil <= 3) return 'bg-red-100 border-red-300 text-red-800';
-        if (daysUntil <= 7) return 'bg-orange-100 border-orange-300 text-orange-800';
-        if (daysUntil <= 14) return 'bg-yellow-100 border-yellow-300 text-yellow-800';
-        return 'bg-emerald-100 border-emerald-300 text-emerald-800';
+        if (daysUntil <= 3) return 'bg-red-100 dark:bg-red-900/40 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200';
+        if (daysUntil <= 7) return 'bg-orange-100 dark:bg-orange-900/40 border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-200';
+        if (daysUntil <= 14) return 'bg-yellow-100 dark:bg-yellow-900/40 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200';
+        return 'bg-emerald-100 dark:bg-emerald-900/40 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200';
     };
 
     const getUrgencyBadge = (daysUntil) => {
@@ -35,11 +35,11 @@ const Exams = () => {
         <div className="space-y-6">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
                         <AlertTriangle className="w-6 h-6 text-amber-500" />
                         Examens détectés
                     </h2>
-                    <p className="text-gray-500 text-sm mt-1">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                         {exams.length} examen{exams.length > 1 ? 's' : ''} à venir • Appuyez pour voir les détails
                     </p>
                 </div>
@@ -53,7 +53,7 @@ const Exams = () => {
                     <button
                         onClick={() => refreshData(true)}
                         disabled={loading}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-slate-700 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors"
                     >
                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                         Actualiser
@@ -63,7 +63,7 @@ const Exams = () => {
 
 
             {error && (
-                <div className="bg-rose-50 text-rose-600 p-4 rounded-xl flex items-center gap-3 border border-rose-100">
+                <div className="bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 p-4 rounded-xl flex items-center gap-3 border border-rose-100 dark:border-rose-800">
                     <AlertTriangle className="w-5 h-5 flex-shrink-0" />
                     <p>{error}</p>
                 </div>
@@ -74,12 +74,12 @@ const Exams = () => {
                     <RefreshCw className="w-8 h-8 animate-spin text-slate-400" />
                 </div>
             ) : sortedExams.length === 0 ? (
-                <div className="bg-slate-50 rounded-2xl p-8 text-center">
-                    <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-slate-700 mb-2">
+                <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-8 text-center">
+                    <Calendar className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">
                         Aucun examen détecté
                     </h3>
-                    <p className="text-slate-500">
+                    <p className="text-slate-500 dark:text-slate-400">
                         Les examens sont détectés via : examen, DS, épreuve, partiel, soutenance
                     </p>
                 </div>
@@ -134,7 +134,7 @@ const Exams = () => {
                     onClick={() => setSelectedExam(null)}
                 >
                     <div
-                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
+                        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
@@ -163,18 +163,18 @@ const Exams = () => {
                         {/* Content */}
                         <div className="p-5 space-y-4">
                             {/* Countdown */}
-                            <div className="text-center p-4 bg-slate-50 rounded-xl">
-                                <p className="text-5xl font-bold text-slate-800">J-{selectedExam.daysUntil}</p>
-                                <p className="text-sm text-slate-500 mt-1">jours restants</p>
+                            <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                <p className="text-5xl font-bold text-slate-800 dark:text-slate-100">J-{selectedExam.daysUntil}</p>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">jours restants</p>
                             </div>
 
                             {/* Date et heure */}
-                            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                                    <Calendar className="w-5 h-5 text-indigo-600" />
+                            <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center">
+                                    <Calendar className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-slate-800">
+                                    <p className="font-semibold text-slate-800 dark:text-slate-100">
                                         {new Date(selectedExam.start).toLocaleDateString('fr-FR', {
                                             weekday: 'long',
                                             day: 'numeric',
@@ -182,7 +182,7 @@ const Exams = () => {
                                             year: 'numeric'
                                         })}
                                     </p>
-                                    <p className="text-sm text-slate-500 flex items-center gap-1">
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
                                         <Clock className="w-3 h-3" />
                                         {new Date(selectedExam.start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                                         {' - '}
@@ -192,13 +192,13 @@ const Exams = () => {
                             </div>
 
                             {/* Durée */}
-                            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                                    <Clock className="w-5 h-5 text-amber-600" />
+                            <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/50 rounded-lg flex items-center justify-center">
+                                    <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-slate-800">Durée de l'épreuve</p>
-                                    <p className="text-sm text-slate-500">
+                                    <p className="font-semibold text-slate-800 dark:text-slate-100">Durée de l'épreuve</p>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">
                                         {Math.round((new Date(selectedExam.end) - new Date(selectedExam.start)) / (1000 * 60))} minutes
                                     </p>
                                 </div>
@@ -206,17 +206,17 @@ const Exams = () => {
 
                             {/* Lieu */}
                             {selectedExam.location && (
-                                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                        <MapPin className="w-5 h-5 text-emerald-600" />
+                                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                    <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">
+                                        <MapPin className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-slate-800">Lieu</p>
-                                        <p className="text-sm text-slate-500">{selectedExam.location}</p>
+                                        <p className="font-semibold text-slate-800 dark:text-slate-100">Lieu</p>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">{selectedExam.location}</p>
                                     </div>
-                                    <div className="mt-4 pt-4 border-t border-slate-100">
+                                    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                                         <Link
-                                            to={`/?date=${new Date(selectedExam.start).toISOString()}&eventId=${new Date(selectedExam.start).getTime()}`}
+                                            to={`/schedule?date=${new Date(selectedExam.start).toISOString()}&eventId=${new Date(selectedExam.start).getTime()}`}
                                             className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
                                         >
                                             <Calendar className="w-5 h-5" />
