@@ -47,7 +47,12 @@ const Layout = ({ children }) => {
                                 <img
                                     src="/fulllogoKrono.png"
                                     alt="Krono"
-                                    className="h-8 w-auto dark:brightness-0 dark:invert"
+                                    className="h-8 w-auto dark:hidden"
+                                />
+                                <img
+                                    src="/fulllogoKronowobg.png"
+                                    alt="Krono"
+                                    className="h-8 w-auto hidden dark:block"
                                 />
                             </NavLink>
 

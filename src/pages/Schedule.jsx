@@ -606,7 +606,7 @@ const MobileDayView = ({ weekStart, processedEventsByDay, initialDate }) => {
                     onClick={() => setSelectedEvent(null)}
                 >
                     <div
-                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
+                        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden animate-slideUp"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
@@ -622,7 +622,7 @@ const MobileDayView = ({ weekStart, processedEventsByDay, initialDate }) => {
                                 </div>
                                 <button
                                     onClick={() => setSelectedEvent(null)}
-                                    className="p-2 hover:bg-white/30 rounded-lg transition-colors"
+                                    className="p-2 hover:bg-white/30 dark:hover:bg-black/20 rounded-lg transition-colors"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -634,17 +634,17 @@ const MobileDayView = ({ weekStart, processedEventsByDay, initialDate }) => {
                         {/* Content */}
                         <div className="p-5 space-y-4">
                             {/* Horaires */}
-                            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-slate-800">
+                                    <p className="font-semibold text-slate-800 dark:text-slate-100">
                                         {selectedEvent.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - {selectedEvent.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                                     </p>
-                                    <p className="text-sm text-slate-500">
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">
                                         Durée: {Math.floor((selectedEvent.end - selectedEvent.start) / (1000 * 60 * 60))}h{((selectedEvent.end - selectedEvent.start) / (1000 * 60)) % 60 > 0 ? `${((selectedEvent.end - selectedEvent.start) / (1000 * 60)) % 60}min` : ''}
                                     </p>
                                 </div>
@@ -652,31 +652,31 @@ const MobileDayView = ({ weekStart, processedEventsByDay, initialDate }) => {
 
                             {/* Lieu */}
                             {selectedEvent.location && (
-                                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                    <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                         </svg>
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-slate-800">Salle</p>
-                                        <p className="text-sm text-slate-500">{selectedEvent.location}</p>
+                                        <p className="font-semibold text-slate-800 dark:text-slate-100">Salle</p>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">{selectedEvent.location}</p>
                                     </div>
                                 </div>
                             )}
 
                             {/* Description / Prof */}
                             {selectedEvent.description && (
-                                <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
-                                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
-                                        <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/50 rounded-lg flex items-center justify-center shrink-0">
+                                        <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                         </svg>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-semibold text-slate-800">Informations</p>
-                                        <p className="text-sm text-slate-500 whitespace-pre-wrap break-words">{selectedEvent.description}</p>
+                                        <p className="font-semibold text-slate-800 dark:text-slate-100">Informations</p>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 whitespace-pre-wrap break-words">{selectedEvent.description}</p>
                                     </div>
                                 </div>
                             )}
