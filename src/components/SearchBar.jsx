@@ -38,23 +38,57 @@ const SearchBar = () => {
     const getSubjectInfo = (subjectName) => {
         const now = new Date();
 
-        // Find UE and matière
+        // Find UE and matière - prioritize exact matches
         let foundUE = null;
         let foundMatiere = null;
 
+        // Normalize the search name
+        const normalizedSearchName = subjectName.toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+        // First pass: Look for exact name match
         for (const ue of ues) {
-            if (ue.nom.toLowerCase().includes(subjectName.toLowerCase())) {
+            const normalizedUEName = ue.nom.toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+            if (normalizedUEName === normalizedSearchName) {
                 foundUE = ue;
                 break;
             }
             for (const mat of ue.matieres || []) {
-                if (mat.nom.toLowerCase().includes(subjectName.toLowerCase())) {
+                const normalizedMatName = mat.nom.toLowerCase()
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                if (normalizedMatName === normalizedSearchName) {
                     foundUE = ue;
                     foundMatiere = mat;
                     break;
                 }
             }
             if (foundMatiere) break;
+        }
+
+        // Second pass: If no exact match, look for partial match with high specificity
+        if (!foundUE) {
+            for (const ue of ues) {
+                const normalizedUEName = ue.nom.toLowerCase()
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+                // Check if the UE name contains the search term (not the other way around)
+                if (normalizedUEName.includes(normalizedSearchName) && normalizedSearchName.length >= 6) {
+                    foundUE = ue;
+                    break;
+                }
+                for (const mat of ue.matieres || []) {
+                    const normalizedMatName = mat.nom.toLowerCase()
+                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    if (normalizedMatName.includes(normalizedSearchName) && normalizedSearchName.length >= 6) {
+                        foundUE = ue;
+                        foundMatiere = mat;
+                        break;
+                    }
+                }
+                if (foundMatiere) break;
+            }
         }
 
         if (!foundUE) return null;
@@ -64,32 +98,53 @@ const SearchBar = () => {
         const nameToSearch = subject.nom;
         const aliases = subject.aliases || [];
 
-        // Build search terms: use aliases first, then distinctive keywords from name
+        // Build search terms with better specificity
+        // Priority 1: Full aliases (most specific)
         let searchTerms = aliases.map(a => a.toLowerCase());
 
-        // Extract distinctive keywords (5+ chars, excluding common words)
-        const commonWords = ['pour', 'avec', 'dans', 'introduction', 'projet', 'analyse', 'fondamentaux'];
+        // Priority 2: Add the full name normalized for matching
+        const fullNameNormalized = nameToSearch.toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[''&]/g, ' ');
+        searchTerms.push(fullNameNormalized);
+
+        // Priority 3: Extract VERY distinctive keywords (7+ chars, excluding common words)
+        const commonWords = ['pour', 'avec', 'dans', 'introduction', 'projet', 'analyse', 'fondamentaux', 'gestion', 'techniques'];
         const nameKeywords = nameToSearch.toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
             .replace(/[''&]/g, ' ')
             .split(/[\s,.-]+/)
-            .filter(w => w.length >= 5 && !commonWords.includes(w))
+            .filter(w => w.length >= 7 && !commonWords.includes(w))
             .sort((a, b) => b.length - a.length); // Longest first
 
-        // Add top 2 most distinctive keywords
+        // Add longest distinctive keywords
         searchTerms.push(...nameKeywords.slice(0, 2));
 
-        // Fallback: first word if no good keywords
-        if (searchTerms.length === 0) {
-            const firstWord = nameToSearch.split(/[\s,.-]+/)[0].toLowerCase();
-            if (firstWord.length >= 5) searchTerms.push(firstWord);
-        }
-
-        // Helper to check if event matches subject - require 5+ char match
+        // Helper to check if event matches subject - use full terms for better accuracy
         const matchesSubject = (eventTitle) => {
-            const title = (eventTitle || '').toLowerCase().replace(/[''&]/g, ' ');
+            const title = (eventTitle || '').toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // Remove accents
+                .replace(/[''&]/g, ' ');
+
+            // Check if any search term matches
             return searchTerms.some(term => {
-                const matchLen = Math.min(term.length, 5);
-                return title.includes(term.substring(0, matchLen));
+                const normalizedTerm = term.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+                // For very short terms (<=4 chars like "CDG"), require exact word match
+                if (normalizedTerm.length <= 4) {
+                    const regex = new RegExp(`\\b${normalizedTerm}\\b`, 'i');
+                    return regex.test(title);
+                }
+                // For medium terms (5-7 chars), require word boundary match
+                else if (normalizedTerm.length <= 7) {
+                    const regex = new RegExp(`\\b${normalizedTerm}`, 'i');
+                    return regex.test(title);
+                }
+                // For long terms (8+ chars), use substring match with minimum 8 chars
+                else {
+                    const minMatchLen = Math.min(normalizedTerm.length, 8);
+                    return title.includes(normalizedTerm.substring(0, minMatchLen));
+                }
             });
         };
 

@@ -12,6 +12,10 @@
         "id": 102,
         "category": "UE ENTREPRISE ET CULTURE PROFESSIONNELLE",
         "nom": "Contreverses numériques",
+        "aliases": [
+            "Controverse num",
+            "Contreverses"
+        ],
         "coef_ue": 1
     },
     {
@@ -317,6 +321,10 @@
         "id": 624,
         "category": "UE MANAGEMENT DES ORGANISATIONS",
         "nom": "Contrôle de gestion",
+        "aliases": [
+            "Controle gestion",
+            "CDG"
+        ],
         "coef_ue": 3
     }
 ]

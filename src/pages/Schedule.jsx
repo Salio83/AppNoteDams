@@ -1,19 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import ICAL from 'ical.js';
-import { RefreshCw, AlertCircle, CalendarDays, ClipboardList, Clock, Filter, X } from 'lucide-react';
+import { RefreshCw, AlertCircle, CalendarDays, ClipboardList, Clock, Filter, X, Info } from 'lucide-react';
 import { getEventColor } from '../utils/colors';
+import { useSchedule } from '../context/ScheduleContext';
 
 const WEEK_DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
 const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 08:00 to 20:00
 
 const Schedule = () => {
     const [searchParams] = useSearchParams();
-    // Default URL pointing to the proxy path if needed, but user might paste full URL.
-    const [url, setUrl] = useState(localStorage.getItem('schedule_url') || 'https://proseconsult.umontpellier.fr/jsp/custom/modules/plannings/direct_cal.jsp?data=58c99062bab31d256bee14356aca3f2423c0f022cb9660eba051b2653be722c4255dc57febc36bcda019d951db547ac9dc5c094f7d1a811b903031bde802c7f52fd380b992d3771de6139e0d9278c8e91aa43e5f4eeaa642fb89a601c5d38bdb242c572c6bf1cac3537c3eed8f7cb4820cecc4c4c9f5d60f651b1c48c2fe7b06,1');
-    const [events, setEvents] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // Utiliser le contexte pour les données de l'emploi du temps
+    const { events, loading, error, lastUpdated, refreshData, getCacheAge } = useSchedule();
+
     const [currentDate, setCurrentDate] = useState(() => {
         // Si une date est passée en paramètre, l'utiliser
         const dateParam = searchParams.get('date');
@@ -23,10 +21,19 @@ const Schedule = () => {
     const [filter, setFilter] = useState(''); // Filter by subject
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
+    // Convertir les dates string en objets Date si nécessaire (depuis le cache)
+    const parsedEvents = useMemo(() => {
+        return events.map(e => ({
+            ...e,
+            start: e.start instanceof Date ? e.start : new Date(e.start),
+            end: e.end instanceof Date ? e.end : new Date(e.end)
+        }));
+    }, [events]);
+
     // Extract unique subjects from events for filter dropdown
     const subjects = useMemo(() => {
         const uniqueSubjects = new Set();
-        events.forEach(e => {
+        parsedEvents.forEach(e => {
             if (e.title) {
                 // Extract base subject name (before any specific suffixes)
                 const subject = e.title.split(' - ')[0].split(' (')[0].trim();
@@ -34,17 +41,18 @@ const Schedule = () => {
             }
         });
         return Array.from(uniqueSubjects).sort();
-    }, [events]);
+    }, [parsedEvents]);
 
+    // Charger les données au démarrage si pas encore chargées
     useEffect(() => {
-        if (url) {
-            loadSchedule();
+        if (events.length === 0 && !loading && !error) {
+            refreshData();
         }
-    }, []); // Initial load only
+    }, [events, loading, error, refreshData]);
 
     // Gérer la navigation vers la bonne semaine via URL (sans ouvrir de popup)
     useEffect(() => {
-        if (events.length > 0 && searchParams.get('date')) {
+        if (parsedEvents.length > 0 && searchParams.get('date')) {
             const targetDate = new Date(searchParams.get('date'));
             // S'assurer que la vue est centrée sur cette semaine
             const diff = targetDate.getTime() - currentDate.getTime();
@@ -52,58 +60,7 @@ const Schedule = () => {
                 setCurrentDate(targetDate);
             }
         }
-    }, [events, searchParams]);
-
-    const loadSchedule = async () => {
-        if (!url) return;
-        setLoading(true);
-        setError(null);
-        localStorage.setItem('schedule_url', url);
-
-        try {
-            // Use proxy if dealing with the known university domain to avoid CORS
-            let fetchUrl = url;
-            if (url.includes('proseconsult.umontpellier.fr')) {
-                // Remove the domain to make it a relative path, which Vite will proxy
-                fetchUrl = url.replace(/https?:\/\/proseconsult\.umontpellier\.fr/, '');
-            }
-
-            const response = await fetch(fetchUrl);
-            if (!response.ok) throw new Error(`Erreur ${response.status}: Impossible de récupérer le fichier`);
-
-            const text = await response.text();
-            parseICS(text);
-        } catch (err) {
-            console.error(err);
-            setError(`Erreur: ${err.message}.`);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const parseICS = (icsData) => {
-        try {
-            const jcalData = ICAL.parse(icsData);
-            const comp = new ICAL.Component(jcalData);
-            const vevents = comp.getAllSubcomponents('vevent');
-
-            const parsedEvents = vevents.map(vevent => {
-                const event = new ICAL.Event(vevent);
-                return {
-                    title: event.summary,
-                    start: event.startDate.toJSDate(),
-                    end: event.endDate.toJSDate(),
-                    location: event.location,
-                    description: event.description
-                };
-            });
-
-            setEvents(parsedEvents);
-        } catch (err) {
-            console.error(err);
-            setError("Format iCal invalide.");
-        }
-    };
+    }, [parsedEvents, searchParams]);
 
     // Helper to get start/end of the viewed week
     const getWeekRange = (date) => {
@@ -139,7 +96,7 @@ const Schedule = () => {
     };
 
     // Apply filter to week events
-    const currentWeekEvents = events.filter(e => {
+    const currentWeekEvents = parsedEvents.filter(e => {
         const inWeek = e.start >= weekStart && e.end <= weekEnd;
         if (!inWeek) return false;
         if (!filter) return true;
@@ -280,8 +237,15 @@ const Schedule = () => {
                         )}
                     </div>
 
+                    {lastUpdated && (
+                        <div className="hidden lg:flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
+                            <Info className="w-3 h-3" />
+                            <span>Cache: {getCacheAge()}</span>
+                        </div>
+                    )}
+
                     <button
-                        onClick={loadSchedule}
+                        onClick={() => refreshData(true)}
                         disabled={loading}
                         className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 shrink-0"
                         title="Actualiser l'emploi du temps"

@@ -6,11 +6,12 @@ import ues from '../../config_ue.json';
 const ScheduleContext = createContext(null);
 
 const CACHE_KEY = 'schedule_cache';
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 heures en ms
+const CACHE_DURATION = 2 * 60 * 60 * 1000; // 2 heures en ms
+const AUTO_REFRESH_INTERVAL = 2 * 60 * 60 * 1000; // Recharger toutes les 2 heures
 
 /**
  * Provider pour gérer l'état global de l'emploi du temps
- * Les données sont chargées une seule fois et cachées pendant 24h
+ * Les données sont chargées et cachées pendant 2h, avec rechargement automatique
  */
 export const ScheduleProvider = ({ children }) => {
     const [events, setEvents] = useState([]);
@@ -53,6 +54,19 @@ export const ScheduleProvider = ({ children }) => {
                 refreshData();
             }
         }
+    }, []);
+
+    // Rechargement automatique toutes les 2 heures
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const url = localStorage.getItem('schedule_url');
+            if (url) {
+                console.log('[ScheduleContext] Rechargement automatique des données...');
+                refreshData(true);
+            }
+        }, AUTO_REFRESH_INTERVAL);
+
+        return () => clearInterval(interval);
     }, []);
 
     // Fonction pour parser les événements iCal
