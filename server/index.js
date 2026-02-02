@@ -53,7 +53,7 @@ app.use('/jsp', createProxyMiddleware({
 app.use(express.static(path.join(__dirname, '../dist')));
 
 // Better Auth Handler
-app.all("/api/auth/*splat", toNodeHandler(auth));
+app.all("/api/auth/*", toNodeHandler(auth));
 
 // Middleware to check authentication using Better Auth
 const requireAuth = async (req, res, next) => {
@@ -172,7 +172,7 @@ app.delete("/api/tasks/:id", requireAuth, async (req, res) => {
 
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
-app.get('*splat', (req, res) => {
+app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
