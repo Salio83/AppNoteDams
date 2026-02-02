@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Search, Calendar, GraduationCap, BookOpen, Clock, X, AlertTriangle, MapPin, Command, ChevronRight, TrendingUp } from 'lucide-react';
 import { useSchedule } from '../context/ScheduleContext';
 import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import ues from '../../config_ue.json';
 
 const SearchBar = () => {
@@ -22,11 +22,8 @@ const SearchBar = () => {
         const loadGrades = async () => {
             if (!user) return;
             try {
-                const { data } = await supabase
-                    .from('grades')
-                    .select('*')
-                    .eq('user_id', user.id);
-                if (data) setGrades(data.map(g => ({ ...g, value: parseFloat(g.value), coef: parseFloat(g.coef) })));
+                const data = await api.get('/grades');
+                if (data) setGrades(data.map(g => ({ ...g, ue_id: parseInt(g.ueId), value: parseFloat(g.value), coef: parseFloat(g.coef) })));
             } catch (e) {
                 console.error('Error loading grades:', e);
             }

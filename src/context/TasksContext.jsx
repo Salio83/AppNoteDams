@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from './AuthContext';
 
 const TasksContext = createContext(null);
@@ -8,7 +8,7 @@ const STORAGE_KEY = 'personal_tasks';
 
 /**
  * Provider pour gérer les tâches personnelles (examens manuels)
- * Les tâches sont stockées dans Supabase avec fallback localStorage
+ * Les tâches sont stockées dans l'API avec fallback localStorage
  */
 export const TasksProvider = ({ children }) => {
     const { user } = useAuth();
@@ -16,21 +16,15 @@ export const TasksProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Charger les tâches depuis Supabase ou localStorage
+    // Charger les tâches depuis API ou localStorage
     const loadTasks = useCallback(async () => {
         setLoading(true);
         setError(null);
 
         try {
             if (user) {
-                // Charger depuis Supabase
-                const { data, error: fetchError } = await supabase
-                    .from('tasks')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .order('date', { ascending: true });
-
-                if (fetchError) throw fetchError;
+                // Charger depuis API
+                const data = await api.get('/tasks');
                 setTasks(data || []);
             } else {
                 // Fallback localStorage
@@ -55,7 +49,8 @@ export const TasksProvider = ({ children }) => {
 
     // Ajouter une tâche
     const addTask = useCallback(async (taskData) => {
-        const newTask = {
+        // Préparation objet pour fallback (ID temporaire)
+        const tempTask = {
             id: crypto.randomUUID(),
             title: taskData.title,
             date: taskData.date,
@@ -65,17 +60,17 @@ export const TasksProvider = ({ children }) => {
 
         try {
             if (user) {
-                const { data, error: insertError } = await supabase
-                    .from('tasks')
-                    .insert([{ ...newTask, user_id: user.id }])
-                    .select()
-                    .single();
-
-                if (insertError) throw insertError;
+                const data = await api.post('/tasks', {
+                    title: taskData.title,
+                    date: taskData.date,
+                    description: taskData.description
+                });
+                
+                // On utilise les données du serveur
                 setTasks(prev => [...prev, data].sort((a, b) => new Date(a.date) - new Date(b.date)));
             } else {
                 // Fallback localStorage
-                const updated = [...tasks, newTask].sort((a, b) => new Date(a.date) - new Date(b.date));
+                const updated = [...tasks, tempTask].sort((a, b) => new Date(a.date) - new Date(b.date));
                 setTasks(updated);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
             }
@@ -83,7 +78,7 @@ export const TasksProvider = ({ children }) => {
         } catch (err) {
             console.error('Erreur ajout tâche:', err);
             // Fallback localStorage
-            const updated = [...tasks, newTask].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const updated = [...tasks, tempTask].sort((a, b) => new Date(a.date) - new Date(b.date));
             setTasks(updated);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
             return { success: true, offline: true };
@@ -94,13 +89,7 @@ export const TasksProvider = ({ children }) => {
     const deleteTask = useCallback(async (taskId) => {
         try {
             if (user) {
-                const { error: deleteError } = await supabase
-                    .from('tasks')
-                    .delete()
-                    .eq('id', taskId)
-                    .eq('user_id', user.id);
-
-                if (deleteError) throw deleteError;
+                await api.delete(`/tasks/${taskId}`);
             }
 
             const updated = tasks.filter(t => t.id !== taskId);

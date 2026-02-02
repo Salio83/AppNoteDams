@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    container_name: appnotedams
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./prisma:/app/prisma # Persist SQLite database
+    environment:
+      - PORT=3000
+      - DATABASE_URL=file:./dev.db
+      - BETTER_AUTH_URL=http://localhost:3000 # Change this to your domain in production
+      # - BETTER_AUTH_SECRET=... # Set this in a .env file or manually

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, GraduationCap, AlertTriangle, Clock, ChevronRight, TrendingUp, BookOpen } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useSchedule } from '../context/ScheduleContext';
 import { calculateGlobalAverage, getUEStatistics } from '../utils/calculations';
@@ -103,20 +103,14 @@ const Home = () => {
             if (!user) return;
 
             try {
-                const { data, error } = await supabase
-                    .from('grades')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
+                const data = await api.get('/grades');
 
                 const gradesData = data.map(g => ({
                     id: g.id,
-                    ue_id: g.ue_id,
-                    value: parseFloat(g.value),
-                    coef: parseFloat(g.coef),
-                    created_at: g.created_at
+                    ue_id: parseInt(g.ueId),
+                    value: g.value,
+                    coef: g.coef,
+                    created_at: g.createdAt
                 }));
 
                 setGrades(gradesData);

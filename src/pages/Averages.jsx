@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import ues from '../../config_ue.json';
 import { BookOpen, Award, TrendingUp, Loader2 } from 'lucide-react';
@@ -14,18 +14,13 @@ const Averages = () => {
             if (!user) return;
 
             try {
-                const { data, error } = await supabase
-                    .from('grades')
-                    .select('*')
-                    .eq('user_id', user.id);
-
-                if (error) throw error;
+                const data = await api.get('/grades');
 
                 setGrades(data.map(g => ({
                     id: g.id,
-                    ue_id: g.ue_id,
-                    value: parseFloat(g.value),
-                    coef: parseFloat(g.coef)
+                    ue_id: parseInt(g.ueId),
+                    value: g.value,
+                    coef: g.coef
                 })));
             } catch (error) {
                 console.error('Erreur chargement:', error);

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Trash2, AlertCircle, GraduationCap, Plus, ChevronDown, ChevronRight, Loader2, X, Calendar } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useSchedule } from '../context/ScheduleContext';
 import { getUEColor, getCategoryShortName } from '../utils/colors';
@@ -20,27 +20,21 @@ const Grades = () => {
     const [saving, setSaving] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(null);
 
-    // Charger les notes depuis Supabase
+    // Charger les notes depuis l'API
     useEffect(() => {
         const loadGrades = async () => {
             if (!user) return;
 
             try {
-                const { data, error } = await supabase
-                    .from('grades')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
+                const data = await api.get('/grades');
 
                 // Transformer les données pour correspondre au format attendu
                 const formattedGrades = data.map(g => ({
                     id: g.id,
-                    ue_id: g.ue_id,
-                    value: parseFloat(g.value),
-                    coef: parseFloat(g.coef),
-                    date: g.created_at
+                    ue_id: parseInt(g.ueId), // Ensure int if needed, or keep as is if string. The original code used parseInt(selectedUE) on insert but map uses g.ue_id.
+                    value: g.value,
+                    coef: g.coef,
+                    date: g.createdAt
                 }));
 
                 setGrades(formattedGrades);
@@ -103,25 +97,18 @@ const Grades = () => {
 
         setSaving(true);
         try {
-            const { data, error } = await supabase
-                .from('grades')
-                .insert({
-                    user_id: user.id,
-                    ue_id: parseInt(selectedUE),
-                    value: parseFloat(grade),
-                    coef: parseFloat(coef)
-                })
-                .select()
-                .single();
-
-            if (error) throw error;
+            const data = await api.post('/grades', {
+                ue_id: parseInt(selectedUE),
+                value: parseFloat(grade),
+                coef: parseFloat(coef)
+            });
 
             const newGrade = {
                 id: data.id,
-                ue_id: data.ue_id,
-                value: parseFloat(data.value),
-                coef: parseFloat(data.coef),
-                date: data.created_at
+                ue_id: parseInt(data.ueId),
+                value: data.value,
+                coef: data.coef,
+                date: data.createdAt
             };
 
             setGrades([newGrade, ...grades]);
@@ -143,13 +130,7 @@ const Grades = () => {
 
     const handleDelete = async (id) => {
         try {
-            const { error } = await supabase
-                .from('grades')
-                .delete()
-                .eq('id', id);
-
-            if (error) throw error;
-
+            await api.delete(`/grades/${id}`);
             setGrades(grades.filter(g => g.id !== id));
         } catch (error) {
             console.error('Erreur suppression:', error);

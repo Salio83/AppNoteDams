@@ -1,29 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { authClient } from '../lib/auth-clients';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        // Vérifier la session au chargement
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
-
-        // Écouter les changements d'auth
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-        });
-
-        return () => subscription.unsubscribe();
-    }, []);
+    // authClient.useSession hook handles loading and session state automatically
+    const { data: session, isPending: loading, error } = authClient.useSession();
+    const user = session?.user || null;
 
     const login = async (email, password) => {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await authClient.signIn.email({
             email,
             password
         });
@@ -31,17 +17,18 @@ export const AuthProvider = ({ children }) => {
         return data;
     };
 
-    const register = async (email, password) => {
-        const { data, error } = await supabase.auth.signUp({
+    const register = async (email, password, name) => {
+        const { data, error } = await authClient.signUp.email({
             email,
-            password
+            password,
+            name: name || email.split('@')[0], // Optional name
         });
         if (error) throw error;
         return data;
     };
 
     const logout = async () => {
-        const { error } = await supabase.auth.signOut();
+        const { error } = await authClient.signOut();
         if (error) throw error;
     };
 
