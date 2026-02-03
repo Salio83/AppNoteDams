@@ -1,0 +1,23 @@
+# Script de déploiement pour AppNoteDams
+$SERVER_IP = "161.97.124.132"
+$SERVER_USER = "root"
+$SERVER_PATH = "~/appnotedams"
+
+Write-Host "--- 1. Préparation du serveur ---" -ForegroundColor Cyan
+ssh $SERVER_USER@$SERVER_IP "mkdir -p $SERVER_PATH/prisma"
+
+Write-Host "--- 2. Transfert des fichiers de configuration ---" -ForegroundColor Cyan
+scp docker-compose.yml Dockerfile.frontend Dockerfile.backend vite.config.js package.json package-lock.json index.html tailwind.config.js postcss.config.js config_ue.json "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/"
+
+Write-Host "--- 3. Transfert des dossiers sources ---" -ForegroundColor Cyan
+scp -r src "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/"
+scp -r server "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/"
+scp -r public "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/"
+scp prisma/schema.prisma "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/prisma/"
+
+Write-Host "--- 4. Build et Redémarrage Docker sur le serveur ---" -ForegroundColor Cyan
+ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker-compose down && docker-compose up --build -d"
+
+Write-Host "--- DÉPLOIEMENT TERMINÉ ---" -ForegroundColor Green
+Write-Host "L'application est en cours de build sur le serveur."
+Write-Host "Accès : http://$SERVER_IP"
