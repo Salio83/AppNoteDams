@@ -1,0 +1,32 @@
+# Utilisation d'une image Node.js légère
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Installation des outils système nécessaires (openssl pour Prisma)
+RUN apk add --no-cache openssl
+
+# Copie des fichiers de dépendances
+COPY package*.json ./
+
+# Installation des dépendances (inclut Prisma CLI)
+RUN npm ci
+
+# Copie du schéma de la base de données
+COPY prisma/ ./prisma/
+
+# Génération du client Prisma (nécessaire pour interagir avec SQLite/Postgres)
+RUN npx prisma generate
+
+# Nettoyage pour ne garder que les dépendances de production
+RUN npm prune --production
+
+# Copie du code du serveur et des bibliothèques nécessaires
+COPY server/ ./server/
+COPY src/lib/ ./src/lib/
+
+# Le backend écoute sur le port 3000
+EXPOSE 3000
+
+# Démarrage du serveur Node.js
+CMD ["node", "server/index.js"]

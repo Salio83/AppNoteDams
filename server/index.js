@@ -27,6 +27,14 @@ app.use(cors({
             return callback(null, true);
         }
 
+        // Allow trusted origins from env
+        if (process.env.BETTER_AUTH_TRUSTED_ORIGINS) {
+            const trusted = process.env.BETTER_AUTH_TRUSTED_ORIGINS.split(",");
+            if (trusted.includes(origin)) {
+                return callback(null, true);
+            }
+        }
+
         const isAllowed = allowedOrigins.some(regex => regex.test(origin));
         
         if (isAllowed) {
@@ -42,10 +50,19 @@ app.use(cors({
 
 app.use(express.json());
 
+// Logging middleware
+app.use((req, res, next) => {
+    res.on('finish', () => {
+        console.log(`${new Date().toISOString()} - ${req.method} ${req.url} ${res.statusCode}`);
+    });
+    next();
+});
+
 // Proxy for University Schedule
-app.use('/jsp', createProxyMiddleware({
+app.use(createProxyMiddleware({
     target: 'https://proseconsult.umontpellier.fr',
     changeOrigin: true,
+    pathFilter: '/jsp',
     secure: false, // matches nginx proxy_ssl_verify off
 }));
 
@@ -53,7 +70,7 @@ app.use('/jsp', createProxyMiddleware({
 app.use(express.static(path.join(__dirname, '../dist')));
 
 // Better Auth Handler
-app.all("/api/auth/*", toNodeHandler(auth));
+app.all("/api/auth/{*path}", toNodeHandler(auth));
 
 // Middleware to check authentication using Better Auth
 const requireAuth = async (req, res, next) => {
@@ -172,7 +189,8 @@ app.delete("/api/tasks/:id", requireAuth, async (req, res) => {
 
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
-app.get('*', (req, res) => {
+app.get('/*path', (req, res) => {
+    console.log(`Catch-all hit for: ${req.url}`);
     res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 

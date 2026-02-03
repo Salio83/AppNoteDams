@@ -1,14 +1,27 @@
 services:
-  app:
-    build: .
-    container_name: appnotedams
+  # Service Frontend (Vite Dev Server)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: appnote-frontend
     restart: always
     ports:
-      - "3000:3000"
+      - "5173:5173" # Port Vite exposé pour Dokku
+    depends_on:
+      - backend
+
+  # Service Backend (Node.js + Prisma)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: appnote-backend
+    restart: always
     volumes:
-      - ./prisma:/app/prisma # Persist SQLite database
+      - ./prisma:/app/prisma # Persistance de la base SQLite
     environment:
       - PORT=3000
       - DATABASE_URL=file:./dev.db
-      - BETTER_AUTH_URL=http://localhost:3000 # Change this to your domain in production
-      # - BETTER_AUTH_SECRET=... # Set this in a .env file or manually
+      - BETTER_AUTH_URL=http://161.97.124.132
+    # Le backend reste interne au réseau Docker (accessible via http://backend:3000)

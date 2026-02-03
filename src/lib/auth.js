@@ -17,6 +17,8 @@ export const auth = betterAuth({
         "http://localhost:5173",
         "http://localhost:4173",
         "http://localhost:3000",
-        process.env.BETTER_AUTH_URL
+        "http://161.97.124.132:3000",
+        process.env.BETTER_AUTH_URL,
+        ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",") || [])
     ].filter(Boolean)
 });

@@ -11,6 +11,11 @@ export default defineConfig({
                 target: 'https://proseconsult.umontpellier.fr',
                 changeOrigin: true,
                 secure: false,
+            },
+            '/api': {
+                target: 'http://backend:3000',
+                changeOrigin: true,
+                secure: false,
             }
         }
     },

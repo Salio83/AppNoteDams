@@ -112,7 +112,9 @@ export const ScheduleProvider = ({ children }) => {
         try {
             let fetchUrl = url;
             if (url.includes('proseconsult.umontpellier.fr')) {
+                // S'assurer de garder le /jsp/ au début pour le proxy
                 fetchUrl = url.replace(/https?:\/\/proseconsult\.umontpellier\.fr/, '');
+                if (!fetchUrl.startsWith('/')) fetchUrl = '/' + fetchUrl;
             }
 
             const response = await fetch(fetchUrl);

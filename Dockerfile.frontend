@@ -1,0 +1,20 @@
+# Dockerfile pour le Frontend (Mode Vite Dev)
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copie des fichiers de dépendances
+COPY package*.json ./
+
+# Installation des dépendances
+RUN npm ci
+
+# Copie de tout le code source
+COPY . .
+
+# Vite écoute sur le port 5173 par défaut
+EXPOSE 5173
+
+# Lancement de Vite en mode host pour permettre l'accès externe via Docker
+# L'option --host est cruciale pour que Docker puisse mapper le port
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
