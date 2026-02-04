@@ -187,6 +187,35 @@ app.delete("/api/tasks/:id", requireAuth, async (req, res) => {
     }
 });
 
+// --- User Settings (Schedule) ---
+
+app.get("/api/user/schedule", requireAuth, async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            select: { scheduleUrl: true }
+        });
+        res.json({ scheduleUrl: user?.scheduleUrl });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Failed to fetch schedule URL" });
+    }
+});
+
+app.post("/api/user/schedule", requireAuth, async (req, res) => {
+    try {
+        const { scheduleUrl } = req.body;
+        await prisma.user.update({
+            where: { id: req.user.id },
+            data: { scheduleUrl }
+        });
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Failed to update schedule URL" });
+    }
+});
+
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
 app.get('/*path', (req, res) => {

@@ -18,6 +18,11 @@ scp prisma/schema.prisma "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/prisma/"
 Write-Host "--- 4. Build et Redémarrage Docker sur le serveur ---" -ForegroundColor Cyan
 ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker-compose down && docker-compose up --build -d"
 
+Write-Host "--- 5. Mise à jour de la base de données ---" -ForegroundColor Cyan
+# Attendre un peu que le conteneur soit prêt (optionnel mais prudent)
+Start-Sleep -Seconds 10
+ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker-compose exec -T backend npx prisma db push"
+
 Write-Host "--- DÉPLOIEMENT TERMINÉ ---" -ForegroundColor Green
 Write-Host "L'application est en cours de build sur le serveur."
 Write-Host "Accès : http://$SERVER_IP"

@@ -1,35 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { Save, UserCircle, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useSchedule } from '../context/ScheduleContext';
 import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
     const { user, logout } = useAuth();
+    const { saveScheduleUrl, scheduleUrl } = useSchedule();
     const navigate = useNavigate();
 
     // States for form fields
-    const [icalUrl, setIcalUrl] = useState('');
+    const [icalUrl, setIcalUrl] = useState(scheduleUrl || '');
     const [filiere, setFiliere] = useState('');
     const [annee, setAnnee] = useState('');
     const [savedv, setSaved] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
-    // Initial load from localStorage
+    // Sync with context URL (loaded from backend)
     useEffect(() => {
-        const storedUrl = localStorage.getItem('schedule_url');
-        if (storedUrl) setIcalUrl(storedUrl);
+        if (scheduleUrl) setIcalUrl(scheduleUrl);
+    }, [scheduleUrl]);
 
+    // Initial load for other fields
+    useEffect(() => {
         // Placeholders for future storage
         // const storedFiliere = localStorage.getItem('filiere');
         // if (storedFiliere) setFiliere(storedFiliere);
     }, []);
 
-    const handleSave = () => {
-        localStorage.setItem('schedule_url', icalUrl);
+    const handleSave = async () => {
+        setIsSaving(true);
+        const success = await saveScheduleUrl(icalUrl);
         // localStorage.setItem('filiere', filiere);
         // localStorage.setItem('annee', annee);
 
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+        if (success) {
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+        }
+        setIsSaving(false);
     };
 
     const handleLogout = async () => {

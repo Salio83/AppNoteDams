@@ -8,6 +8,8 @@ services:
     restart: always
     ports:
       - "5173:5173" # Port Vite exposé pour Dokku
+    environment:
+      - VITE_BACKEND_TARGET=http://backend:3000
     depends_on:
       - backend
 
