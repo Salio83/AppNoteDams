@@ -6,33 +6,31 @@ import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
     const { user, logout } = useAuth();
-    const { saveScheduleUrl, scheduleUrl } = useSchedule();
+    const { saveSettings, scheduleUrl, filiere: contextFiliere, annee: contextAnnee } = useSchedule();
     const navigate = useNavigate();
 
     // States for form fields
     const [icalUrl, setIcalUrl] = useState(scheduleUrl || '');
-    const [filiere, setFiliere] = useState('');
-    const [annee, setAnnee] = useState('');
+    const [filiere, setFiliere] = useState(contextFiliere || '');
+    const [annee, setAnnee] = useState(contextAnnee || '');
     const [savedv, setSaved] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Sync with context URL (loaded from backend)
+    // Sync with context values (loaded from backend)
     useEffect(() => {
         if (scheduleUrl) setIcalUrl(scheduleUrl);
-    }, [scheduleUrl]);
+        if (contextFiliere) setFiliere(contextFiliere);
+        if (contextAnnee) setAnnee(contextAnnee);
+    }, [scheduleUrl, contextFiliere, contextAnnee]);
 
-    // Initial load for other fields
-    useEffect(() => {
-        // Placeholders for future storage
-        // const storedFiliere = localStorage.getItem('filiere');
-        // if (storedFiliere) setFiliere(storedFiliere);
-    }, []);
 
     const handleSave = async () => {
         setIsSaving(true);
-        const success = await saveScheduleUrl(icalUrl);
-        // localStorage.setItem('filiere', filiere);
-        // localStorage.setItem('annee', annee);
+        const success = await saveSettings({
+            scheduleUrl: icalUrl,
+            filiere,
+            annee
+        });
 
         if (success) {
             setSaved(true);

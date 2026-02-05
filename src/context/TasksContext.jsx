@@ -8,7 +8,7 @@ const STORAGE_KEY = 'personal_tasks';
 
 /**
  * Provider pour gérer les tâches personnelles (examens manuels)
- * Les tâches sont stockées dans l'API avec fallback localStorage
+ * Les tâches sont stockées dans l'API avec fallback 
  */
 export const TasksProvider = ({ children }) => {
     const { user } = useAuth();
@@ -16,7 +16,7 @@ export const TasksProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Charger les tâches depuis API ou localStorage
+    // Charger les tâches depuis API e
     const loadTasks = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -26,16 +26,9 @@ export const TasksProvider = ({ children }) => {
                 // Charger depuis API
                 const data = await api.get('/tasks');
                 setTasks(data || []);
-            } else {
-                // Fallback localStorage
-                const stored = localStorage.getItem(STORAGE_KEY);
-                setTasks(stored ? JSON.parse(stored) : []);
-            }
+            } 
         } catch (err) {
             console.error('Erreur chargement tâches:', err);
-            // Fallback localStorage en cas d'erreur
-            const stored = localStorage.getItem(STORAGE_KEY);
-            setTasks(stored ? JSON.parse(stored) : []);
             setError('Erreur de synchronisation, mode hors-ligne');
         } finally {
             setLoading(false);

@@ -1,20 +1,21 @@
-# Dockerfile pour le Frontend (Mode Vite Dev)
-FROM node:20-alpine
+# Étape 1 : Build de l'application React
+FROM node:20-alpine AS build
 
 WORKDIR /app
-
-# Copie des fichiers de dépendances
 COPY package*.json ./
-
-# Installation des dépendances
 RUN npm ci
-
-# Copie de tout le code source
 COPY . .
+RUN npm run build
 
-# Vite écoute sur le port 5173 par défaut
-EXPOSE 5173
+# Étape 2 : Serveur de production Nginx
+FROM nginx:stable-alpine
 
-# Lancement de Vite en mode host pour permettre l'accès externe via Docker
-# L'option --host est cruciale pour que Docker puisse mapper le port
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Copie de la configuration Nginx personnalisée
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copie des fichiers buildés depuis l'étape 1
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

@@ -27,7 +27,7 @@ const QuickAccessButton = ({ to, icon: Icon, label, description, color }) => (
 
 const Home = () => {
     const { user } = useAuth();
-    const { events } = useSchedule();
+    const { events, filiere, annee } = useSchedule();
     const [grades, setGrades] = useState([]);
     const [globalAverage, setGlobalAverage] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -156,9 +156,19 @@ const Home = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <header>
-                <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 dark:text-white">Bonjour 👋</h1>
-                <p className="text-slate-500 dark:text-slate-400">Voici un aperçu de votre journée</p>
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 dark:text-white">Bonjour 👋</h1>
+                    <p className="text-slate-500 dark:text-slate-400">
+                        {filiere ? `${filiere}${annee ? ` - ${annee}` : ''}` : 'Voici un aperçu de votre journée'}
+                    </p>
+                </div>
+                {filiere && (
+                    <div className="text-right hidden md:block">
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ma Formation</p>
+                        <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{filiere} {annee}</p>
+                    </div>
+                )}
             </header>
 
             {/* Main Stats Grid */}

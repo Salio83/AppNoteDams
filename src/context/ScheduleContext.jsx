@@ -3,18 +3,18 @@ import ICAL from 'ical.js';
 import { detectExams, calculateHoursBySubject } from '../utils/scheduleAnalysis';
 import ues from '../../config_ue.json';
 import { api } from '../lib/api';
+import { useAuth } from './AuthContext';
 
 const ScheduleContext = createContext(null);
 
-const CACHE_KEY = 'schedule_cache';
-const CACHE_DURATION = 2 * 60 * 60 * 1000; // 2 heures en ms
 const AUTO_REFRESH_INTERVAL = 2 * 60 * 60 * 1000; // Recharger toutes les 2 heures
 
 /**
  * Provider pour gérer l'état global de l'emploi du temps
- * Les données sont chargées et cachées pendant 2h, avec rechargement automatique
+ * Les données sont chargées depuis l'URL stockée en base de données
  */
 export const ScheduleProvider = ({ children }) => {
+    const { user } = useAuth();
     const [events, setEvents] = useState([]);
     const [exams, setExams] = useState([]);
     const [hoursBySubject, setHoursBySubject] = useState({ S1: [], S2: [], all: [] });
@@ -22,71 +22,8 @@ export const ScheduleProvider = ({ children }) => {
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
     const [scheduleUrl, setScheduleUrl] = useState('');
-
-    // Initial Sync with Backend
-    useEffect(() => {
-        const syncWithBackend = async () => {
-            try {
-                const { scheduleUrl: backendUrl } = await api.get('/user/schedule');
-                
-                if (backendUrl) {
-                    setScheduleUrl(backendUrl);
-                    // On ne stocke plus dans localStorage, on utilise juste le state
-                    // Si on a un cache mais pas de URL chargée, on verra au prochain refresh
-                } else {
-                    setScheduleUrl('');
-                    localStorage.removeItem(CACHE_KEY);
-                    setEvents([]);
-                    setExams([]);
-                    setHoursBySubject({ S1: [], S2: [], all: [] });
-                    setLastUpdated(null);
-                }
-            } catch (e) {
-                console.error("Failed to sync schedule URL", e);
-            }
-            
-            loadInitialData();
-        };
-
-        syncWithBackend();
-    }, []);
-
-    const loadInitialData = () => {
-        const loadFromCache = () => {
-            try {
-                const cached = localStorage.getItem(CACHE_KEY);
-                if (cached) {
-                    const { events, exams, hoursBySubject, timestamp } = JSON.parse(cached);
-                    const age = Date.now() - timestamp;
-
-                    if (age < CACHE_DURATION) {
-                        setEvents(events);
-                        setExams(exams);
-                        setHoursBySubject(hoursBySubject);
-                        setLastUpdated(new Date(timestamp));
-                        return true;
-                    }
-                }
-            } catch (e) {
-                console.error('Erreur lecture cache:', e);
-            }
-            return false;
-        };
-
-        loadFromCache();
-    };
-
-    // Rechargement automatique toutes les 2 heures
-    useEffect(() => {
-        if (!scheduleUrl) return;
-
-        const interval = setInterval(() => {
-            console.log('[ScheduleContext] Rechargement automatique des données...');
-            refreshData(true);
-        }, AUTO_REFRESH_INTERVAL);
-
-        return () => clearInterval(interval);
-    }, [scheduleUrl]);
+    const [filiere, setFiliere] = useState('');
+    const [annee, setAnnee] = useState('');
 
     // Fonction pour parser les événements iCal
     const parseEvents = (icsData) => {
@@ -106,54 +43,21 @@ export const ScheduleProvider = ({ children }) => {
         });
     };
 
-    // Fonction pour sauvegarder l'URL (Backend uniquement)
-    const saveScheduleUrl = async (url) => {
-        try {
-            await api.post('/user/schedule', { scheduleUrl: url });
-            setScheduleUrl(url);
-            
-            if (url) {
-                // On force le refresh avec la nouvelle URL du state
-                setTimeout(() => refreshData(true), 0);
-            } else {
-                localStorage.removeItem(CACHE_KEY);
-                setEvents([]);
-                setExams([]);
-                setHoursBySubject({ S1: [], S2: [], all: [] });
-            }
-            return true;
-        } catch (err) {
-            console.error(err);
-            setError("Impossible de sauvegarder l'URL: " + err.message);
-            return false;
-        }
-    };
-
-    // Fonction pour actualiser les données (appelée manuellement ou auto)
-    const refreshData = useCallback(async (forceRefresh = false) => {
-        // On utilise l'URL du state, plus celle du localStorage
-        if (!scheduleUrl) {
+    // Fonction pour actualiser les données
+    const refreshData = useCallback(async (urlOverride = null) => {
+        const urlToFetch = urlOverride || scheduleUrl;
+        
+        if (!urlToFetch) {
             return;
-        }
-
-        // Vérifier si le cache est encore valide (sauf si forceRefresh)
-        if (!forceRefresh) {
-            const cached = localStorage.getItem(CACHE_KEY);
-            if (cached) {
-                const { timestamp } = JSON.parse(cached);
-                if (Date.now() - timestamp < CACHE_DURATION) {
-                    return; // Cache encore valide
-                }
-            }
         }
 
         setLoading(true);
         setError(null);
 
         try {
-            let fetchUrl = scheduleUrl;
-            if (scheduleUrl.includes('proseconsult.umontpellier.fr')) {
-                fetchUrl = scheduleUrl.replace(/https?:\/\/proseconsult\.umontpellier\.fr/, '');
+            let fetchUrl = urlToFetch;
+            if (urlToFetch.includes('proseconsult.umontpellier.fr')) {
+                fetchUrl = urlToFetch.replace(/https?:\/\/proseconsult\.umontpellier\.fr/, '');
                 if (!fetchUrl.startsWith('/')) fetchUrl = '/' + fetchUrl;
             }
 
@@ -173,14 +77,6 @@ export const ScheduleProvider = ({ children }) => {
             setHoursBySubject({ S1: hoursS1, S2: hoursS2, all: hoursAll });
             setLastUpdated(new Date());
 
-            const cacheData = {
-                events: parsedEvents,
-                exams: detectedExams,
-                hoursBySubject: { S1: hoursS1, S2: hoursS2, all: hoursAll },
-                timestamp: Date.now()
-            };
-            localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-
         } catch (err) {
             console.error(err);
             setError(`Erreur de chargement: ${err.message}`);
@@ -189,18 +85,93 @@ export const ScheduleProvider = ({ children }) => {
         }
     }, [scheduleUrl]);
 
-    // Calculer le temps restant avant expiration du cache
+    // Initial Sync with Backend & Cleanup legacy cache
+    useEffect(() => {
+        const syncWithBackend = async () => {
+            if (!user) {
+                setScheduleUrl('');
+                setFiliere('');
+                setAnnee('');
+                setEvents([]);
+                setExams([]);
+                setHoursBySubject({ S1: [], S2: [], all: [] });
+                setLastUpdated(null);
+                return;
+            }
+
+            try {
+                // Charger tous les paramètres utilisateur
+                const settings = await api.get('/user/settings');
+                
+                if (settings.scheduleUrl) {
+                    setScheduleUrl(settings.scheduleUrl);
+                    refreshData(settings.scheduleUrl);
+                    console.log("Synchronisation de l'emploi du temps réussie");
+                }
+                
+                if (settings.filiere) setFiliere(settings.filiere);
+                if (settings.annee) setAnnee(settings.annee);
+                
+            } catch (e) {
+                console.error("Failed to sync user settings", e);
+            }
+        };
+
+        syncWithBackend();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
+
+    // Rechargement automatique
+    useEffect(() => {
+        if (!scheduleUrl) return;
+
+        const interval = setInterval(() => {
+            console.log('[ScheduleContext] Rechargement automatique des données...');
+            refreshData();
+        }, AUTO_REFRESH_INTERVAL);
+
+        return () => clearInterval(interval);
+    }, [scheduleUrl, refreshData]);
+
+    // Fonction pour sauvegarder les paramètres (Backend)
+    const saveSettings = async (settings) => {
+        try {
+            await api.post('/user/settings', settings);
+            
+            if (settings.scheduleUrl !== undefined) {
+                setScheduleUrl(settings.scheduleUrl);
+                if (settings.scheduleUrl) {
+                    refreshData(settings.scheduleUrl);
+                } else {
+                    setEvents([]);
+                    setExams([]);
+                    setHoursBySubject({ S1: [], S2: [], all: [] });
+                }
+            }
+            
+            if (settings.filiere !== undefined) setFiliere(settings.filiere);
+            if (settings.annee !== undefined) setAnnee(settings.annee);
+            
+            return true;
+        } catch (err) {
+            console.error(err);
+            setError("Impossible de sauvegarder les paramètres: " + err.message);
+            return false;
+        }
+    };
+
+    // Remplacer saveScheduleUrl par saveSettings pour plus de flexibilité
+    // On garde saveScheduleUrl pour la compatibilité si besoin
+    const saveScheduleUrl = (url) => saveSettings({ scheduleUrl: url });
+
+    // Calculer l'âge des données
     const getCacheAge = useCallback(() => {
         if (!lastUpdated) return null;
         const ageMs = Date.now() - lastUpdated.getTime();
-        const remainingMs = CACHE_DURATION - ageMs;
-
-        if (remainingMs <= 0) return 'Expiré';
-
-        const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-        const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-
-        return `${hours}h ${minutes}min`;
+        
+        const minutes = Math.floor(ageMs / (1000 * 60));
+        if (minutes < 1) return 'À l\'instant';
+        return `Il y a ${minutes} min`;
     }, [lastUpdated]);
 
     const value = {
@@ -211,9 +182,12 @@ export const ScheduleProvider = ({ children }) => {
         error,
         lastUpdated,
         scheduleUrl,
+        filiere,
+        annee,
         refreshData,
         getCacheAge,
-        saveScheduleUrl
+        saveScheduleUrl,
+        saveSettings
     };
 
     return (
@@ -223,9 +197,6 @@ export const ScheduleProvider = ({ children }) => {
     );
 };
 
-/**
- * Hook pour accéder aux données de l'emploi du temps
- */
 export const useSchedule = () => {
     const context = useContext(ScheduleContext);
     if (!context) {

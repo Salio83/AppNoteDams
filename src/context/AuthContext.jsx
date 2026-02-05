@@ -30,10 +30,6 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
         const { error } = await authClient.signOut();
         if (error) throw error;
-        
-        // Clear local schedule data to prevent leaking to other accounts
-        localStorage.removeItem('schedule_url');
-        localStorage.removeItem('schedule_cache');
     };
 
     const value = {

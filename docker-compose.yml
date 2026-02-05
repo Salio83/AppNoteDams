@@ -1,5 +1,5 @@
 services:
-  # Service Frontend (Vite Dev Server)
+  # Service Frontend (Nginx Production)
   frontend:
     build:
       context: .
@@ -7,7 +7,7 @@ services:
     container_name: appnote-frontend
     restart: always
     ports:
-      - "5173:5173" # Port Vite exposé pour Dokku
+      - "80:80"
     environment:
       - VITE_BACKEND_TARGET=http://backend:3000
     depends_on:
@@ -26,4 +26,5 @@ services:
       - PORT=3000
       - DATABASE_URL=file:./dev.db
       - BETTER_AUTH_URL=http://161.97.124.132
+      - BETTER_AUTH_TRUSTED_ORIGINS=http://161.97.124.132,http://localhost
     # Le backend reste interne au réseau Docker (accessible via http://backend:3000)

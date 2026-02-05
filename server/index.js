@@ -15,37 +15,12 @@ const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy is essential when running behind Nginx
+app.set('trust proxy', 1);
+
 app.use(cors({
-    origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl)
-        if (!origin) return callback(null, true);
-        
-        const allowedOrigins = [/^http:\/\/localhost(:\d+)?$/, /^http:\/\/127\.0\.0\.1(:\d+)?$/];
-        
-        // Allow production URL
-        if (process.env.BETTER_AUTH_URL && origin === process.env.BETTER_AUTH_URL) {
-            return callback(null, true);
-        }
-
-        // Allow trusted origins from env
-        if (process.env.BETTER_AUTH_TRUSTED_ORIGINS) {
-            const trusted = process.env.BETTER_AUTH_TRUSTED_ORIGINS.split(",");
-            if (trusted.includes(origin)) {
-                return callback(null, true);
-            }
-        }
-
-        const isAllowed = allowedOrigins.some(regex => regex.test(origin));
-        
-        if (isAllowed) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"]
+    origin: true, // Allow the origin that matches the request
+    credentials: true
 }));
 
 app.use(express.json());
@@ -70,7 +45,7 @@ app.use(createProxyMiddleware({
 app.use(express.static(path.join(__dirname, '../dist')));
 
 // Better Auth Handler
-app.all("/api/auth/{*path}", toNodeHandler(auth));
+app.all("/api/auth*", toNodeHandler(auth));
 
 // Middleware to check authentication using Better Auth
 const requireAuth = async (req, res, next) => {
@@ -187,8 +162,48 @@ app.delete("/api/tasks/:id", requireAuth, async (req, res) => {
     }
 });
 
-// --- User Settings (Schedule) ---
+// --- User Settings (Schedule & Profile) ---
 
+app.get("/api/user/settings", requireAuth, async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            select: { 
+                scheduleUrl: true,
+                filiere: true,
+                annee: true
+            }
+        });
+        res.json({ 
+            scheduleUrl: user?.scheduleUrl,
+            filiere: user?.filiere,
+            annee: user?.annee
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Failed to fetch user settings" });
+    }
+});
+
+app.post("/api/user/settings", requireAuth, async (req, res) => {
+    try {
+        const { scheduleUrl, filiere, annee } = req.body;
+        await prisma.user.update({
+            where: { id: req.user.id },
+            data: { 
+                scheduleUrl,
+                filiere,
+                annee
+            }
+        });
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Failed to update user settings" });
+    }
+});
+
+// Backward compatibility (optional but good)
 app.get("/api/user/schedule", requireAuth, async (req, res) => {
     try {
         const user = await prisma.user.findUnique({
