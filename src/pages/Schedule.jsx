@@ -3,9 +3,22 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { RefreshCw, AlertCircle, CalendarDays, ClipboardList, Clock, Filter, X, Info } from 'lucide-react';
 import { getEventColor } from '../utils/colors';
 import { useSchedule } from '../context/ScheduleContext';
+import { isExamEvent } from '../utils/scheduleAnalysis';
 
 const WEEK_DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
 const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 08:00 to 20:00
+
+// Helper function to get event colors with exam override
+const getEventColors = (event) => {
+    if (isExamEvent(event)) {
+        return {
+            bg: 'bg-red-500 dark:bg-red-600',
+            border: 'border-red-600 dark:border-red-500',
+            text: 'text-white'
+        };
+    }
+    return getEventColor(event.title);
+};
 
 const Schedule = () => {
     const [searchParams] = useSearchParams();
@@ -302,7 +315,7 @@ const Schedule = () => {
                                 return (
                                     <div key={dayIndex} className="border-b border-l border-slate-100 dark:border-slate-700 h-12 relative bg-slate-50/10 dark:bg-slate-800/50 hover:bg-slate-50/30 dark:hover:bg-slate-700/50 transition-colors">
                                         {hourEvents.map((evt, idx) => {
-                                            const colors = getEventColor(evt.title);
+                                            const colors = getEventColors(evt);
 
                                             // Calculer le décalage vertical basé sur les minutes
                                             const startMinutes = evt.start.getMinutes();
@@ -356,13 +369,13 @@ const Schedule = () => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className={`p-4 ${getEventColor(selectedEvent.title).bg} ${getEventColor(selectedEvent.title).border} border-b`}>
+                        <div className={`p-4 ${getEventColors(selectedEvent).bg} ${getEventColors(selectedEvent).border} border-b`}>
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                    <h3 className={`font-bold text-lg ${getEventColor(selectedEvent.title).text}`}>
+                                    <h3 className={`font-bold text-lg ${getEventColors(selectedEvent).text}`}>
                                         {selectedEvent.title}
                                     </h3>
-                                    <p className={`text-sm opacity-80 ${getEventColor(selectedEvent.title).text}`}>
+                                    <p className={`text-sm opacity-80 ${getEventColors(selectedEvent).text}`}>
                                         {selectedEvent.start.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                                     </p>
                                 </div>
@@ -449,6 +462,7 @@ const MobileDayView = ({ weekStart, processedEventsByDay, initialDate }) => {
         return today >= 1 && today <= 5 ? today - 1 : 0;
     });
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [viewMode, setViewMode] = useState('day'); // 'day' or 'week'
 
     // Mettre à jour le jour sélectionné quand initialDate change (navigation depuis un examen)
     useEffect(() => {
@@ -486,82 +500,172 @@ const MobileDayView = ({ weekStart, processedEventsByDay, initialDate }) => {
 
     return (
         <div className="lg:hidden flex-1 flex flex-col min-h-0">
-            {/* Day Selector Tabs */}
-            <div className="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 mb-2 shrink-0">
-                {MOBILE_WEEK_DAYS.map((day, index) => {
-                    const dayDate = getDayDate(index);
-                    const isToday = new Date().toDateString() === dayDate.toDateString();
-                    const isSelected = selectedDayIndex === index;
-                    const hasEvents = processedEventsByDay[index]?.length > 0;
-
-                    return (
-                        <button
-                            key={day}
-                            onClick={() => setSelectedDayIndex(index)}
-                            className={`flex-1 py-2 px-1 rounded-lg text-center transition-all relative ${isSelected
-                                ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
-                                : isToday
-                                    ? 'text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                                }`}
-                        >
-                            <div className={`text-xs font-semibold ${isSelected ? 'text-slate-900 dark:text-white' : ''}`}>{day}</div>
-                            <div className={`text-lg font-bold ${isToday && !isSelected ? 'text-blue-600 dark:text-blue-400' : ''}`}>
-                                {dayDate.getDate()}
-                            </div>
-                            {hasEvents && (
-                                <div className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-500'
-                                    }`} />
-                            )}
-                        </button>
-                    );
-                })}
+            {/* View Mode Toggle */}
+            <div className="flex items-center justify-between mb-2 shrink-0">
+                <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+                    <button
+                        onClick={() => setViewMode('day')}
+                        className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'day'
+                            ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                            : 'text-slate-500 dark:text-slate-400'
+                            }`}
+                    >
+                        Jour
+                    </button>
+                    <button
+                        onClick={() => setViewMode('week')}
+                        className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'week'
+                            ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                            : 'text-slate-500 dark:text-slate-400'
+                            }`}
+                    >
+                        Semaine
+                    </button>
+                </div>
             </div>
 
-            {/* Events List for Selected Day */}
-            <div className="flex-1 overflow-y-auto space-y-2 pb-4">
-                {sortedEvents.length === 0 ? (
-                    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 text-center border border-slate-200/60 dark:border-slate-700">
-                        <div className="text-slate-400 dark:text-slate-500 text-sm">Aucun cours ce jour</div>
-                    </div>
-                ) : (
-                    sortedEvents.map((evt, idx) => {
-                        const colors = getEventColor(evt.title);
-                        const startTime = evt.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                        const endTime = evt.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                        const durationMinutes = (evt.end - evt.start) / (1000 * 60);
-                        const durationHours = Math.floor(durationMinutes / 60);
-                        const durationMins = durationMinutes % 60;
+            {/* Day Selector Tabs - Only show in day mode */}
+            {viewMode === 'day' && (
+                <div className="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 mb-2 shrink-0">
+                    {MOBILE_WEEK_DAYS.map((day, index) => {
+                        const dayDate = getDayDate(index);
+                        const isToday = new Date().toDateString() === dayDate.toDateString();
+                        const isSelected = selectedDayIndex === index;
+                        const hasEvents = processedEventsByDay[index]?.length > 0;
 
                         return (
-                            <div
-                                key={idx}
-                                onClick={() => setSelectedEvent(evt)}
-                                className={`${colors.bg} border ${colors.border} rounded-xl p-4 ${colors.text} cursor-pointer hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all`}
+                            <button
+                                key={day}
+                                onClick={() => setSelectedDayIndex(index)}
+                                className={`flex-1 py-2 px-1 rounded-lg text-center transition-all relative ${isSelected
+                                    ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+                                    : isToday
+                                        ? 'text-blue-600 dark:text-blue-400'
+                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                                    }`}
                             >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-base leading-snug mb-1">{evt.title}</h3>
-                                        {evt.location && (
-                                            <p className="text-sm opacity-80 mb-2">📍 {evt.location}</p>
+                                <div className={`text-xs font-semibold ${isSelected ? 'text-slate-900 dark:text-white' : ''}`}>{day}</div>
+                                <div className={`text-lg font-bold ${isToday && !isSelected ? 'text-blue-600 dark:text-blue-400' : ''}`}>
+                                    {dayDate.getDate()}
+                                </div>
+                                {hasEvents && (
+                                    <div className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-500'
+                                        }`} />
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Events List for Selected Day - Day Mode */}
+            {viewMode === 'day' && (
+                <div className="flex-1 overflow-y-auto space-y-2 pb-4">
+                    {sortedEvents.length === 0 ? (
+                        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 text-center border border-slate-200/60 dark:border-slate-700">
+                            <div className="text-slate-400 dark:text-slate-500 text-sm">Aucun cours ce jour</div>
+                        </div>
+                    ) : (
+                        sortedEvents.map((evt, idx) => {
+                            const colors = getEventColors(evt);
+                            const startTime = evt.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                            const endTime = evt.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                            const durationMinutes = (evt.end - evt.start) / (1000 * 60);
+                            const durationHours = Math.floor(durationMinutes / 60);
+                            const durationMins = durationMinutes % 60;
+
+                            return (
+                                <div
+                                    key={idx}
+                                    onClick={() => setSelectedEvent(evt)}
+                                    className={`${colors.bg} border ${colors.border} rounded-xl p-4 ${colors.text} cursor-pointer hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all`}
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-bold text-base leading-snug mb-1">{evt.title}</h3>
+                                            {evt.location && (
+                                                <p className="text-sm opacity-80 mb-2">📍 {evt.location}</p>
+                                            )}
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <div className="font-semibold text-sm">{startTime}</div>
+                                            <div className="text-xs opacity-70">{endTime}</div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 pt-2 border-t border-current/10 flex items-center justify-between text-xs opacity-70">
+                                        <span>
+                                            Durée: {durationHours > 0 ? `${durationHours}h` : ''}{durationMins > 0 ? `${durationMins}min` : ''}
+                                        </span>
+                                        <span className="text-[10px] opacity-60">Appuyez pour détails →</span>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            )}
+
+            {/* Week View - Week Mode */}
+            {viewMode === 'week' && (
+                <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                    {/* Week Grid - 5 columns */}
+                    <div className="grid grid-cols-5 gap-1.5 flex-1 min-h-0">
+                        {MOBILE_WEEK_DAYS.map((day, dayIndex) => {
+                            const dayDate = getDayDate(dayIndex);
+                            const isToday = new Date().toDateString() === dayDate.toDateString();
+                            const dayEvents = processedEventsByDay[dayIndex] || [];
+                            const sortedDayEvents = [...dayEvents].sort((a, b) => a.start - b.start);
+
+                            return (
+                                <div key={day} className="flex flex-col min-h-0 bg-white dark:bg-slate-800 rounded-lg border border-slate-200/60 dark:border-slate-700 overflow-hidden">
+                                    {/* Day Header */}
+                                    <div className={`p-2 border-b border-slate-200/60 dark:border-slate-700 shrink-0 ${isToday ? 'bg-blue-50/50 dark:bg-blue-900/20' : 'bg-slate-50 dark:bg-slate-900'}`}>
+                                        <div className={`font-bold text-xs text-center ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                                            {day.substring(0, 3)}
+                                        </div>
+                                        <div className={`text-sm font-bold text-center ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`}>
+                                            {dayDate.getDate()}
+                                        </div>
+                                    </div>
+
+                                    {/* Day Events - Scrollable */}
+                                    <div className="flex-1 overflow-y-auto p-1.5 space-y-1.5">
+                                        {sortedDayEvents.length === 0 ? (
+                                            <div className="text-center py-4 text-slate-400 dark:text-slate-500 text-xs">
+                                                Aucun cours
+                                            </div>
+                                        ) : (
+                                            sortedDayEvents.map((evt, idx) => {
+                                                const colors = getEventColors(evt);
+                                                const startTime = evt.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                                                const endTime = evt.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        onClick={() => setSelectedEvent(evt)}
+                                                        className={`${colors.bg} border ${colors.border} rounded-md p-2 ${colors.text} cursor-pointer active:scale-95 transition-all`}
+                                                    >
+                                                        <div className="text-[10px] font-bold leading-tight mb-1" style={{ wordBreak: 'break-word' }}>
+                                                            {evt.title}
+                                                        </div>
+                                                        <div className="text-[9px] opacity-80 font-medium">
+                                                            {startTime}
+                                                        </div>
+                                                        <div className="text-[8px] opacity-60 mt-0.5">
+                                                            {endTime}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
                                         )}
                                     </div>
-                                    <div className="text-right shrink-0">
-                                        <div className="font-semibold text-sm">{startTime}</div>
-                                        <div className="text-xs opacity-70">{endTime}</div>
-                                    </div>
                                 </div>
-                                <div className="mt-2 pt-2 border-t border-current/10 flex items-center justify-between text-xs opacity-70">
-                                    <span>
-                                        Durée: {durationHours > 0 ? `${durationHours}h` : ''}{durationMins > 0 ? `${durationMins}min` : ''}
-                                    </span>
-                                    <span className="text-[10px] opacity-60">Appuyez pour détails →</span>
-                                </div>
-                            </div>
-                        );
-                    })
-                )}
-            </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* Event Detail Modal */}
             {selectedEvent && (
@@ -574,13 +678,13 @@ const MobileDayView = ({ weekStart, processedEventsByDay, initialDate }) => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className={`p-4 ${getEventColor(selectedEvent.title).bg} ${getEventColor(selectedEvent.title).border} border-b`}>
+                        <div className={`p-4 ${getEventColors(selectedEvent).bg} ${getEventColors(selectedEvent).border} border-b`}>
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                    <h3 className={`font-bold text-lg ${getEventColor(selectedEvent.title).text}`}>
+                                    <h3 className={`font-bold text-lg ${getEventColors(selectedEvent).text}`}>
                                         {selectedEvent.title}
                                     </h3>
-                                    <p className={`text-sm opacity-80 ${getEventColor(selectedEvent.title).text}`}>
+                                    <p className={`text-sm opacity-80 ${getEventColors(selectedEvent).text}`}>
                                         {selectedEvent.start.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                                     </p>
                                 </div>
