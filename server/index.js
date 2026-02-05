@@ -45,7 +45,7 @@ app.use(createProxyMiddleware({
 app.use(express.static(path.join(__dirname, '../dist')));
 
 // Better Auth Handler
-app.all("/api/auth*", toNodeHandler(auth));
+app.use("/api/auth", toNodeHandler(auth));
 
 // Middleware to check authentication using Better Auth
 const requireAuth = async (req, res, next) => {
@@ -57,7 +57,7 @@ const requireAuth = async (req, res, next) => {
         if (!session) {
             return res.status(401).json({ error: "Unauthorized" });
         }
-        
+
         req.user = session.user;
         next();
     } catch (e) {
@@ -162,19 +162,62 @@ app.delete("/api/tasks/:id", requireAuth, async (req, res) => {
     }
 });
 
+// --- Schedule Events ---
+
+app.get("/api/schedule/events", requireAuth, async (req, res) => {
+    try {
+        const events = await prisma.scheduleEvent.findMany({
+            where: { userId: req.user.id },
+            orderBy: { start: "asc" }
+        });
+        res.json(events);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Failed to fetch schedule events" });
+    }
+});
+
+app.post("/api/schedule/events", requireAuth, async (req, res) => {
+    try {
+        const { events } = req.body;
+
+        // Supprimer tous les anciens événements de l'utilisateur
+        await prisma.scheduleEvent.deleteMany({
+            where: { userId: req.user.id }
+        });
+
+        // Créer les nouveaux événements
+        const createdEvents = await prisma.scheduleEvent.createMany({
+            data: events.map(event => ({
+                userId: req.user.id,
+                title: event.title,
+                start: new Date(event.start),
+                end: new Date(event.end),
+                location: event.location || null,
+                description: event.description || null,
+            }))
+        });
+
+        res.json({ success: true, count: createdEvents.count });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Failed to save schedule events" });
+    }
+});
+
 // --- User Settings (Schedule & Profile) ---
 
 app.get("/api/user/settings", requireAuth, async (req, res) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
-            select: { 
+            select: {
                 scheduleUrl: true,
                 filiere: true,
                 annee: true
             }
         });
-        res.json({ 
+        res.json({
             scheduleUrl: user?.scheduleUrl,
             filiere: user?.filiere,
             annee: user?.annee
@@ -190,7 +233,7 @@ app.post("/api/user/settings", requireAuth, async (req, res) => {
         const { scheduleUrl, filiere, annee } = req.body;
         await prisma.user.update({
             where: { id: req.user.id },
-            data: { 
+            data: {
                 scheduleUrl,
                 filiere,
                 annee

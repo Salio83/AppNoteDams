@@ -46,7 +46,7 @@ export const ScheduleProvider = ({ children }) => {
     // Fonction pour actualiser les données
     const refreshData = useCallback(async (urlOverride = null) => {
         const urlToFetch = urlOverride || scheduleUrl;
-        
+
         if (!urlToFetch) {
             return;
         }
@@ -77,13 +77,24 @@ export const ScheduleProvider = ({ children }) => {
             setHoursBySubject({ S1: hoursS1, S2: hoursS2, all: hoursAll });
             setLastUpdated(new Date());
 
+            // Sauvegarder les événements dans la base de données pour la synchronisation
+            if (user) {
+                try {
+                    await api.post('/schedule/events', { events: parsedEvents });
+                    console.log('[ScheduleContext] Événements sauvegardés dans la base de données');
+                } catch (saveError) {
+                    console.error('[ScheduleContext] Erreur lors de la sauvegarde des événements:', saveError);
+                    // Ne pas bloquer l'affichage si la sauvegarde échoue
+                }
+            }
+
         } catch (err) {
             console.error(err);
             setError(`Erreur de chargement: ${err.message}`);
         } finally {
             setLoading(false);
         }
-    }, [scheduleUrl]);
+    }, [scheduleUrl, user]);
 
     // Initial Sync with Backend & Cleanup legacy cache
     useEffect(() => {
@@ -102,16 +113,50 @@ export const ScheduleProvider = ({ children }) => {
             try {
                 // Charger tous les paramètres utilisateur
                 const settings = await api.get('/user/settings');
-                
+
                 if (settings.scheduleUrl) {
                     setScheduleUrl(settings.scheduleUrl);
-                    refreshData(settings.scheduleUrl);
-                    console.log("Synchronisation de l'emploi du temps réussie");
                 }
-                
+
                 if (settings.filiere) setFiliere(settings.filiere);
                 if (settings.annee) setAnnee(settings.annee);
-                
+
+                // Charger les événements depuis la base de données
+                try {
+                    const savedEvents = await api.get('/schedule/events');
+                    if (savedEvents && savedEvents.length > 0) {
+                        // Convertir les dates string en objets Date
+                        const parsedSavedEvents = savedEvents.map(e => ({
+                            ...e,
+                            start: new Date(e.start),
+                            end: new Date(e.end)
+                        }));
+
+                        setEvents(parsedSavedEvents);
+
+                        // Recalculer les examens et heures
+                        const detectedExams = detectExams(parsedSavedEvents);
+                        const hoursS1 = calculateHoursBySubject(parsedSavedEvents, ues, 'S1');
+                        const hoursS2 = calculateHoursBySubject(parsedSavedEvents, ues, 'S2');
+                        const hoursAll = calculateHoursBySubject(parsedSavedEvents, ues, 'all');
+
+                        setExams(detectedExams);
+                        setHoursBySubject({ S1: hoursS1, S2: hoursS2, all: hoursAll });
+                        setLastUpdated(new Date(savedEvents[0]?.updatedAt || Date.now()));
+
+                        console.log("[ScheduleContext] Événements chargés depuis la base de données");
+                    } else if (settings.scheduleUrl) {
+                        // Si pas d'événements sauvegardés, charger depuis l'URL iCal
+                        refreshData(settings.scheduleUrl);
+                    }
+                } catch (eventsError) {
+                    console.error("Failed to load saved events", eventsError);
+                    // Si erreur, essayer de charger depuis l'URL iCal
+                    if (settings.scheduleUrl) {
+                        refreshData(settings.scheduleUrl);
+                    }
+                }
+
             } catch (e) {
                 console.error("Failed to sync user settings", e);
             }
@@ -137,7 +182,7 @@ export const ScheduleProvider = ({ children }) => {
     const saveSettings = async (settings) => {
         try {
             await api.post('/user/settings', settings);
-            
+
             if (settings.scheduleUrl !== undefined) {
                 setScheduleUrl(settings.scheduleUrl);
                 if (settings.scheduleUrl) {
@@ -148,10 +193,10 @@ export const ScheduleProvider = ({ children }) => {
                     setHoursBySubject({ S1: [], S2: [], all: [] });
                 }
             }
-            
+
             if (settings.filiere !== undefined) setFiliere(settings.filiere);
             if (settings.annee !== undefined) setAnnee(settings.annee);
-            
+
             return true;
         } catch (err) {
             console.error(err);
@@ -168,7 +213,7 @@ export const ScheduleProvider = ({ children }) => {
     const getCacheAge = useCallback(() => {
         if (!lastUpdated) return null;
         const ageMs = Date.now() - lastUpdated.getTime();
-        
+
         const minutes = Math.floor(ageMs / (1000 * 60));
         if (minutes < 1) return 'À l\'instant';
         return `Il y a ${minutes} min`;

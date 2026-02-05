@@ -23,6 +23,14 @@ Write-Host "--- 5. Mise à jour de la base de données ---" -ForegroundColor Cya
 Start-Sleep -Seconds 10
 ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker-compose exec -T backend npx prisma db push"
 
+Write-Host "--- 6. Régénération du Prisma Client ---" -ForegroundColor Cyan
+# Régénérer le client Prisma pour prendre en compte les changements de schéma
+ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker-compose exec -T backend npx prisma generate"
+
+Write-Host "--- 7. Redémarrage du backend ---" -ForegroundColor Cyan
+# Redémarrer le backend pour appliquer les changements
+ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker-compose restart backend"
+
 Write-Host "--- DÉPLOIEMENT TERMINÉ ---" -ForegroundColor Green
 Write-Host "L'application est en cours de build sur le serveur."
 Write-Host "Accès : http://$SERVER_IP"

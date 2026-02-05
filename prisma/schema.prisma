@@ -26,6 +26,7 @@ model User {
   accounts      Account[]
   grades        Grade[]
   tasks         Task[]
+  scheduleEvents ScheduleEvent[]
 
   @@map("user")
 }
@@ -96,4 +97,19 @@ model Task {
   createdAt   DateTime @default(now())
 
   @@map("task")
+}
+
+model ScheduleEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  start       DateTime
+  end         DateTime
+  location    String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("schedule_event")
 }
