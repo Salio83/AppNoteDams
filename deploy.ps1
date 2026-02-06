@@ -7,7 +7,7 @@ Write-Host "--- 1. Préparation du serveur ---" -ForegroundColor Cyan
 ssh $SERVER_USER@$SERVER_IP "mkdir -p $SERVER_PATH/prisma"
 
 Write-Host "--- 2. Transfert des fichiers de configuration ---" -ForegroundColor Cyan
-scp docker-compose.yml Dockerfile.frontend Dockerfile.backend vite.config.js package.json package-lock.json index.html tailwind.config.js postcss.config.js config_ue.json "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/"
+scp docker-compose.yml Dockerfile.frontend Dockerfile.backend vite.config.js package.json package-lock.json index.html tailwind.config.js postcss.config.js config_ue.json nginx.conf "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/"
 
 Write-Host "--- 3. Transfert des dossiers sources ---" -ForegroundColor Cyan
 scp -r src "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/"
@@ -33,4 +33,4 @@ ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker-compose restart backend"
 
 Write-Host "--- DÉPLOIEMENT TERMINÉ ---" -ForegroundColor Green
 Write-Host "L'application est en cours de build sur le serveur."
-Write-Host "Accès : http://$SERVER_IP"
+Write-Host "Accès : https://krono-etu.com"

@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
-        provider: "sqlite", 
+        provider: "sqlite",
     }),
     emailAndPassword: {
         enabled: true,
@@ -21,7 +21,7 @@ export const auth = betterAuth({
         "http://localhost:5173",
         "http://localhost:4173",
         "http://localhost:3000",
-        "http://161.97.124.132:3000",
+        "https://krono-etu.com",
         process.env.BETTER_AUTH_URL,
         ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",") || [])
     ].filter(Boolean)
