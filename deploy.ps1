@@ -16,20 +16,20 @@ scp -r public "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/"
 scp prisma/schema.prisma "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/prisma/"
 
 Write-Host "--- 4. Build et Redémarrage Docker sur le serveur ---" -ForegroundColor Cyan
-ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker-compose down && docker-compose up --build -d"
+ssh $SERVER_USER@$SERVER_IP "service nginx stop || true && cd $SERVER_PATH && docker compose down && docker compose up --build -d"
 
 Write-Host "--- 5. Mise à jour de la base de données ---" -ForegroundColor Cyan
 # Attendre un peu que le conteneur soit prêt (optionnel mais prudent)
 Start-Sleep -Seconds 10
-ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker-compose exec -T backend npx prisma db push"
+ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker compose exec -T backend npx prisma db push --accept-data-loss"
 
 Write-Host "--- 6. Régénération du Prisma Client ---" -ForegroundColor Cyan
 # Régénérer le client Prisma pour prendre en compte les changements de schéma
-ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker-compose exec -T backend npx prisma generate"
+ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker compose exec -T backend npx prisma generate"
 
 Write-Host "--- 7. Redémarrage du backend ---" -ForegroundColor Cyan
 # Redémarrer le backend pour appliquer les changements
-ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker-compose restart backend"
+ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker compose restart backend"
 
 Write-Host "--- DÉPLOIEMENT TERMINÉ ---" -ForegroundColor Green
 Write-Host "L'application est en cours de build sur le serveur."
