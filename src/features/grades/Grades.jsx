@@ -21,6 +21,7 @@ const Grades = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [selectedSemester, setSelectedSemester] = useState(1);
 
     // Charger les notes depuis l'API
     useEffect(() => {
@@ -60,15 +61,27 @@ const Grades = () => {
         loadGrades();
     }, [user]);
 
-    // Grouper les UEs par catégorie
+    // Filtrer les UEs par semestre
+    const semesterUEs = useMemo(() => {
+        return ues.filter(ue => ue.semester === selectedSemester);
+    }, [ues, selectedSemester]);
+
+    // Reset selected UE when switching semesters
+    useEffect(() => {
+        if (semesterUEs.length > 0) {
+            setSelectedUE(semesterUEs[0].id);
+        }
+    }, [semesterUEs]);
+
+    // Grouper les UEs par catégorie (filtrées par semestre)
     const groupedUEs = useMemo(() => {
-        return ues.reduce((acc, ue) => {
+        return semesterUEs.reduce((acc, ue) => {
             const category = ue.category || 'Autres';
             if (!acc[category]) acc[category] = [];
             acc[category].push(ue);
             return acc;
         }, {});
-    }, []);
+    }, [semesterUEs]);
 
     // Grouper les notes par UE
     const gradesByUE = useMemo(() => {
@@ -163,6 +176,22 @@ const Grades = () => {
                 </h2>
                 <p className="text-gray-500 dark:text-gray-400">Appuyez sur une UE pour voir le détail des matières</p>
             </header>
+
+            {/* Semester Tabs */}
+            <div className="flex gap-2">
+                {[1, 2].map(sem => (
+                    <button
+                        key={sem}
+                        onClick={() => setSelectedSemester(sem)}
+                        className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border ${selectedSemester === sem
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50'
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                            }`}
+                    >
+                        Semestre {sem}
+                    </button>
+                ))}
+            </div>
 
 
             {/* Formulaire d'ajout */}

@@ -10,6 +10,7 @@ const Averages = () => {
     const [grades, setGrades] = useState([]);
     const [loading, setLoading] = useState(true);
     const { ues, hasUEConfig } = useUEConfig();
+    const [selectedSemester, setSelectedSemester] = useState(1);
 
     useEffect(() => {
         const loadGrades = async () => {
@@ -35,8 +36,11 @@ const Averages = () => {
     }, [user]);
 
     const groupedData = useMemo(() => {
+        // Filter UEs by selected semester
+        const semesterUEs = ues.filter(ue => ue.semester === selectedSemester);
+
         // 1. Group UEs by category
-        const ueByCat = ues.reduce((acc, ue) => {
+        const ueByCat = semesterUEs.reduce((acc, ue) => {
             const cat = ue.category || 'Autres';
             if (!acc[cat]) acc[cat] = [];
             acc[cat].push(ue);
@@ -46,18 +50,6 @@ const Averages = () => {
         // 2. Calculate stats for each UE in each category
         const data = Object.entries(ueByCat).map(([category, ueList]) => {
             const uesWithStats = ueList.map(ue => {
-                // Get grades for this UE (which is actually a subject in the config logic used so far?)
-                // Wait, config_ue.json seems to list SUBJECTS (Matières) but calls them UEs?
-                // Let's re-read config: 
-                // { "id": 101, "category": "UE ENTREPRISE...", "nom": "Culture éco...", "coef_ue": 2 }
-                // So "UE ENTREPRISE..." is the UE, and "Culture..." is the Subject (Module).
-                // The coef_ue is likely the coefficient of the Subject within the UE, OR the UE coefficient?
-                // Standard usage: UE lists Subjects. 
-                // Let's assume the user wants to see:
-                // UE Title (Category) -> Average of that UE
-                //   - Subject 1 (Nom) -> Grade | Avg
-
-                // Let's group grades by this specific Subject ID (ue.id)
                 const subjectGrades = grades.filter(g => g.ue_id === ue.id);
 
                 if (subjectGrades.length === 0) {
@@ -76,7 +68,6 @@ const Averages = () => {
             });
 
             // Calculate Category (Real UE) Average
-            // If coef_ue is the coefficient of the subject inside the UE
             const validSubjects = uesWithStats.filter(u => u.average !== null);
             let ueaverage = null;
 
@@ -94,7 +85,15 @@ const Averages = () => {
         });
 
         return data;
-    }, [grades]);
+    }, [grades, ues, selectedSemester]);
+
+    // Calculate overall semester average
+    const semesterAverage = useMemo(() => {
+        const withAvg = groupedData.filter(g => g.ueAverage !== null);
+        if (withAvg.length === 0) return null;
+        const total = withAvg.reduce((sum, g) => sum + g.ueAverage, 0);
+        return parseFloat((total / withAvg.length).toFixed(2));
+    }, [groupedData]);
 
     if (!hasUEConfig) {
         return (
@@ -114,6 +113,40 @@ const Averages = () => {
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Moyennes Détaillées</h2>
                 <p className="text-slate-500 dark:text-slate-400">Vue d'ensemble par Unité d'Enseignement</p>
             </header>
+
+            {/* Semester Tabs */}
+            <div className="flex gap-2">
+                {[1, 2].map(sem => (
+                    <button
+                        key={sem}
+                        onClick={() => setSelectedSemester(sem)}
+                        className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border ${selectedSemester === sem
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                            }`}
+                    >
+                        Semestre {sem}
+                    </button>
+                ))}
+            </div>
+
+            {/* Semester Overall Average */}
+            {semesterAverage !== null && (
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl flex items-center justify-center">
+                            <Award className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        <div>
+                            <p className="font-semibold text-slate-700 dark:text-slate-200">Moyenne générale S{selectedSemester}</p>
+                            <p className="text-xs text-slate-400 dark:text-slate-500">Moyenne des UEs du semestre</p>
+                        </div>
+                    </div>
+                    <span className={`text-2xl font-bold px-4 py-1.5 rounded-xl ${semesterAverage >= 10 ? 'bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400'}`}>
+                        {semesterAverage}
+                    </span>
+                </div>
+            )}
 
             <div className="grid gap-8">
                 {groupedData.map((group) => (
