@@ -7,9 +7,14 @@ import { PrismaClient } from "@prisma/client";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load UE configuration
+const configPath = path.join(__dirname, "../config_ue.json");
+const ALL_UES = JSON.parse(fs.readFileSync(configPath, "utf8"));
 
 const prisma = new PrismaClient();
 const app = express();
@@ -117,7 +122,160 @@ app.delete("/api/grades/:id", requireAuth, async (req, res) => {
     }
 });
 
-// --- Tasks ---
+// --- Rankings ---
+
+app.get("/api/grades/rankings", requireAuth, async (req, res) => {
+    try {
+        const semester = parseInt(req.query.semester) || 1;
+
+        const currentUser = await prisma.user.findUnique({
+            where: { id: req.user.id }
+        });
+
+        if (!currentUser.filiere || !currentUser.annee) {
+            return res.json({ error: "missing_profile", message: "Profil incomplet (filière ou année manquante)" });
+        }
+
+        // 1. Get all users in same filiere and annee
+        const peerUsers = await prisma.user.findMany({
+            where: {
+                filiere: currentUser.filiere,
+                annee: currentUser.annee
+            },
+            include: {
+                grades: true
+            }
+        });
+
+        if (peerUsers.length <= 0) {
+            return res.json({ error: "no_users", message: "Aucun utilisateur trouvé pour cette filière" });
+        }
+
+        // 2. Filter config by semester
+        const semesterUEs = ALL_UES.filter(ue => ue.semester === semester);
+        const ueCategories = [...new Set(semesterUEs.map(ue => ue.category))];
+
+        // 3. Helper to calculate stats for a user
+        const calculateUserStats = (userGrades) => {
+            const stats = {
+                subjects: {}, // ueId -> average
+                ues: {},      // category -> average
+                overall: null
+            };
+
+            // a. Subject Averages
+            const gradesByUE = {};
+            userGrades.forEach(g => {
+                if (!gradesByUE[g.ueId]) gradesByUE[g.ueId] = [];
+                gradesByUE[g.ueId].push(g);
+            });
+
+            semesterUEs.forEach(configUE => {
+                const grades = gradesByUE[String(configUE.id)] || [];
+                if (grades.length > 0) {
+                    let sum = 0;
+                    let totalCoef = 0;
+                    grades.forEach(g => {
+                        sum += g.value * g.coef;
+                        totalCoef += g.coef;
+                    });
+                    stats.subjects[configUE.id] = totalCoef > 0 ? sum / totalCoef : null;
+                } else {
+                    stats.subjects[configUE.id] = null;
+                }
+            });
+
+            // b. UE Category Averages
+            let totalWeightedSum = 0;
+            let totalWeightTotal = 0;
+
+            ueCategories.forEach(cat => {
+                const catUEs = semesterUEs.filter(ue => ue.category === cat);
+                let catSum = 0;
+                let catWeight = 0;
+
+                catUEs.forEach(ue => {
+                    const avg = stats.subjects[ue.id];
+                    if (avg !== null) {
+                        catSum += avg * ue.coef_ue;
+                        catWeight += ue.coef_ue;
+                    }
+                });
+
+                if (catWeight > 0) {
+                    const catAvg = catSum / catWeight;
+                    stats.ues[cat] = catAvg;
+                    totalWeightedSum += catAvg;
+                    totalWeightTotal += 1;
+                } else {
+                    stats.ues[cat] = null;
+                }
+            });
+
+            // c. Overall
+            if (totalWeightTotal > 0) {
+                stats.overall = totalWeightedSum / totalWeightTotal;
+            }
+
+            return stats;
+        };
+
+        // 4. Calculate for everyone
+        const allStats = peerUsers.map(u => ({
+            userId: u.id,
+            stats: calculateUserStats(u.grades)
+        }));
+
+        // 5. Function to get rank
+        const getRank = (userId, metricPath, type) => {
+            const values = allStats.map(s => {
+                if (type === 'subject') return s.stats.subjects[metricPath];
+                if (type === 'ue') return s.stats.ues[metricPath];
+                return s.stats.overall;
+            }).filter(v => v !== null && v !== undefined);
+
+            if (values.length === 0) return null;
+
+            const userStat = allStats.find(s => s.userId === userId).stats;
+            let targetValue;
+            if (type === 'subject') targetValue = userStat.subjects[metricPath];
+            else if (type === 'ue') targetValue = userStat.ues[metricPath];
+            else targetValue = userStat.overall;
+
+            if (targetValue === null || targetValue === undefined) return null;
+
+            // Standard Competition Ranking (1224)
+            const betterCount = values.filter(v => v > targetValue).length;
+
+            return {
+                rank: betterCount + 1,
+                total: values.length,
+                average: values.reduce((a, b) => a + b, 0) / values.length
+            };
+        };
+
+        // 6. Build response for current user
+        const rankings = {
+            overall: getRank(currentUser.id, null, 'overall'),
+            ues: {},
+            subjects: {}
+        };
+
+        ueCategories.forEach(cat => {
+            rankings.ues[cat] = getRank(currentUser.id, cat, 'ue');
+        });
+
+        semesterUEs.forEach(ue => {
+            rankings.subjects[ue.id] = getRank(currentUser.id, ue.id, 'subject');
+        });
+
+        res.json(rankings);
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Failed to calculate rankings" });
+    }
+});
 
 app.get("/api/tasks", requireAuth, async (req, res) => {
     try {

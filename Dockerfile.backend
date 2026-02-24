@@ -24,6 +24,7 @@ RUN npm prune --production
 # Copie du code du serveur et des bibliothèques nécessaires
 COPY server/ ./server/
 COPY src/lib/ ./src/lib/
+COPY config_ue.json ./
 
 # Le backend écoute sur le port 3000
 EXPOSE 3000
