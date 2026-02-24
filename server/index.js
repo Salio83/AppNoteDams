@@ -215,13 +215,15 @@ app.get("/api/user/settings", requireAuth, async (req, res) => {
             select: {
                 scheduleUrl: true,
                 filiere: true,
-                annee: true
+                annee: true,
+                groupe: true
             }
         });
         res.json({
             scheduleUrl: user?.scheduleUrl,
             filiere: user?.filiere,
-            annee: user?.annee
+            annee: user?.annee,
+            groupe: user?.groupe
         });
     } catch (e) {
         console.error(e);
@@ -231,19 +233,93 @@ app.get("/api/user/settings", requireAuth, async (req, res) => {
 
 app.post("/api/user/settings", requireAuth, async (req, res) => {
     try {
-        const { scheduleUrl, filiere, annee } = req.body;
+        const { scheduleUrl, filiere, annee, groupe } = req.body;
         await prisma.user.update({
             where: { id: req.user.id },
             data: {
                 scheduleUrl,
                 filiere,
-                annee
+                annee,
+                groupe
             }
         });
         res.json({ success: true });
     } catch (e) {
         console.error(e);
         res.status(500).json({ error: "Failed to update user settings" });
+    }
+});
+
+// --- Schedule Matching (Onboarding) ---
+
+app.get("/api/user/match-schedule", requireAuth, async (req, res) => {
+    try {
+        const { filiere, annee, groupe } = req.query;
+
+        if (!filiere || !annee || !groupe) {
+            return res.json({ matched: false, reason: "Missing profile fields" });
+        }
+
+        // Find another user with same profile who has schedule events
+        const matchingUser = await prisma.user.findFirst({
+            where: {
+                filiere,
+                annee,
+                groupe,
+                id: { not: req.user.id },
+                scheduleEvents: { some: {} }
+            },
+            select: { id: true }
+        });
+
+        if (!matchingUser) {
+            return res.json({ matched: false });
+        }
+
+        // Copy schedule events from matching user
+        const events = await prisma.scheduleEvent.findMany({
+            where: { userId: matchingUser.id }
+        });
+
+        // Delete any existing events for current user first
+        await prisma.scheduleEvent.deleteMany({
+            where: { userId: req.user.id }
+        });
+
+        await prisma.scheduleEvent.createMany({
+            data: events.map(e => ({
+                userId: req.user.id,
+                title: e.title,
+                start: e.start,
+                end: e.end,
+                location: e.location,
+                description: e.description
+            }))
+        });
+
+        // Also copy the scheduleUrl if the current user doesn't have one
+        const currentUser = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            select: { scheduleUrl: true }
+        });
+
+        if (!currentUser.scheduleUrl) {
+            const matchedUserFull = await prisma.user.findUnique({
+                where: { id: matchingUser.id },
+                select: { scheduleUrl: true }
+            });
+            if (matchedUserFull?.scheduleUrl) {
+                await prisma.user.update({
+                    where: { id: req.user.id },
+                    data: { scheduleUrl: matchedUserFull.scheduleUrl }
+                });
+            }
+        }
+
+        res.json({ matched: true, eventsCount: events.length });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Failed to match schedule" });
     }
 });
 
