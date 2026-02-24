@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authClient } from '../services/auth-clients';
+import { api } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -8,6 +9,17 @@ export const AuthProvider = ({ children }) => {
     const { data: session, isPending: loading, error } = authClient.useSession();
     const user = session?.user || null;
     const [needsOnboarding, setNeedsOnboarding] = useState(false);
+
+    // Check if authenticated user needs onboarding (no filiere set)
+    useEffect(() => {
+        if (user && !loading) {
+            api.get('/user/settings').then(settings => {
+                if (!settings.filiere) {
+                    setNeedsOnboarding(true);
+                }
+            }).catch(console.error);
+        }
+    }, [user, loading]);
 
     const login = async (email, password) => {
         const { data, error } = await authClient.signIn.email({

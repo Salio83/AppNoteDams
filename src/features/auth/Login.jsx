@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/context/AuthContext';
+import { api } from '../../shared/services/api';
 import { LogIn, UserPlus, User, Lock, AlertCircle } from 'lucide-react';
 
 const Login = () => {
@@ -30,7 +31,18 @@ const Login = () => {
                 navigate('/onboarding');
             } else {
                 await login(email, password);
-                navigate('/');
+                // Check if existing user needs onboarding (no filiere set)
+                try {
+                    const settings = await api.get('/user/settings');
+                    if (!settings.filiere) {
+                        setNeedsOnboarding(true);
+                        navigate('/onboarding');
+                    } else {
+                        navigate('/');
+                    }
+                } catch {
+                    navigate('/');
+                }
             }
         } catch (err) {
             if (isRegister) {
