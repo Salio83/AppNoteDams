@@ -20,6 +20,7 @@ model User {
   scheduleUrl   String?
   filiere       String?
   annee         String?
+  groupe        String?
   createdAt     DateTime
   updatedAt     DateTime
   sessions      Session[]

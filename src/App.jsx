@@ -1,26 +1,28 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
-import Home from './pages/Home';
-import Dashboard from './pages/Dashboard';
-import Grades from './pages/Grades';
-import Schedule from './pages/Schedule';
-import Averages from './pages/Averages';
-import Exams from './pages/Exams';
-import RemainingHours from './pages/RemainingHours';
-import Tasks from './pages/Tasks';
-import Calendar from './pages/Calendar';
-import Login from './pages/Login';
-import Profile from './pages/Profile';
-import { ScheduleProvider } from './context/ScheduleContext';
-import { TasksProvider } from './context/TasksContext';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
-import { ToastProvider } from './context/ToastContext';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import Layout from './shared/components/Layout';
+import Home from './features/home/Home';
+import Dashboard from './features/dashboard/Dashboard';
+import Grades from './features/grades/Grades';
+import Schedule from './features/schedule/Schedule';
+import Averages from './features/grades/Averages';
+import Exams from './features/schedule/Exams';
+import RemainingHours from './features/hours/RemainingHours';
+import Tasks from './features/tasks/Tasks';
+import Calendar from './features/calendar/Calendar';
+import Login from './features/auth/Login';
+import Onboarding from './features/auth/Onboarding';
+import Profile from './features/profile/Profile';
+import { ScheduleProvider } from './shared/context/ScheduleContext';
+import { TasksProvider } from './shared/context/TasksContext';
+import { AuthProvider, useAuth } from './shared/context/AuthContext';
+import { ThemeProvider } from './shared/context/ThemeContext';
+import { ToastProvider } from './shared/context/ToastContext';
 
 // Composant pour protéger les routes
 const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated, loading } = useAuth();
+    const { isAuthenticated, loading, needsOnboarding } = useAuth();
+    const location = useLocation();
 
     if (loading) {
         return (
@@ -34,6 +36,10 @@ const ProtectedRoute = ({ children }) => {
         return <Navigate to="/login" replace />;
     }
 
+    if (needsOnboarding && location.pathname !== '/onboarding') {
+        return <Navigate to="/onboarding" replace />;
+    }
+
     return children;
 };
 
@@ -42,6 +48,11 @@ function AppContent() {
         <Router>
             <Routes>
                 <Route path="/login" element={<Login />} />
+                <Route path="/onboarding" element={
+                    <ProtectedRoute>
+                        <Onboarding />
+                    </ProtectedRoute>
+                } />
                 <Route path="/*" element={
                     <ProtectedRoute>
                         <ScheduleProvider>
