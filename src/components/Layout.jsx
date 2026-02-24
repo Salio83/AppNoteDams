@@ -32,7 +32,7 @@ const Layout = ({ children }) => {
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
             {/* Top Navigation Bar - Centered around logo */}
             <nav className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-700/60 transition-all duration-300">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-center gap-6">
 
                         {/* Left section - Search */}
@@ -109,7 +109,7 @@ const Layout = ({ children }) => {
             </div>
 
             {/* Main Content */}
-            <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+            <main className="flex-1 max-w-screen-2xl mx-auto w-full p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
                 {children}
             </main>
         </div>

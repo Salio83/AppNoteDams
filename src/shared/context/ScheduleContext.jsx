@@ -49,7 +49,7 @@ export const ScheduleProvider = ({ children }) => {
 
     // Fonction pour actualiser les données
     const refreshData = useCallback(async (urlOverride = null) => {
-        const urlToFetch = urlOverride || scheduleUrl;
+        const urlToFetch = (typeof urlOverride === 'string' && urlOverride) ? urlOverride : scheduleUrl;
 
         if (!urlToFetch) {
             return;

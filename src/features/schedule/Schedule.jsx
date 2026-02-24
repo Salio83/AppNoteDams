@@ -207,15 +207,15 @@ const Schedule = () => {
             <header className="flex flex-row justify-between items-center gap-2 shrink-0">
                 <div className="flex items-center gap-2 lg:gap-4 flex-wrap">
                     <h2 className="text-lg lg:text-2xl font-bold text-slate-800 dark:text-white">Emploi du temps</h2>
-                    <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
-                        <button onClick={handlePrevWeek} className="p-1 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm rounded transition-all text-slate-600 dark:text-slate-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                    <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+                        <button onClick={handlePrevWeek} className="p-2 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm rounded transition-all text-slate-600 dark:text-slate-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                         </button>
-                        <button onClick={handleToday} className="px-2 lg:px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm rounded transition-all">
+                        <button onClick={handleToday} className="min-w-[7rem] text-center px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm rounded transition-all">
                             {weekStart.getDate()} - {weekEnd.getDate()} {weekEnd.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '')}
                         </button>
-                        <button onClick={handleNextWeek} className="p-1 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm rounded transition-all text-slate-600 dark:text-slate-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                        <button onClick={handleNextWeek} className="p-2 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm rounded transition-all text-slate-600 dark:text-slate-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                         </button>
                     </div>
                     <p className="text-sm font-medium text-slate-500 dark:text-slate-400 capitalize hidden lg:block">
@@ -619,64 +619,70 @@ const MobileDayView = ({ weekStart, processedEventsByDay, initialDate }) => {
                 </div>
             )}
 
-            {/* Week View - Week Mode */}
+            {/* Week View - Week Mode (Time-aligned grid) */}
             {viewMode === 'week' && (
-                <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-                    {/* Week Grid - 5 columns */}
-                    <div className="grid grid-cols-5 gap-1.5 flex-1 min-h-0">
-                        {MOBILE_WEEK_DAYS.map((day, dayIndex) => {
-                            const dayDate = getDayDate(dayIndex);
+                <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700 overflow-hidden">
+                    {/* Day Headers (sticky) */}
+                    <div className="grid grid-cols-[28px_repeat(5,1fr)] shrink-0 border-b border-slate-200 dark:border-slate-700">
+                        <div className="bg-slate-50 dark:bg-slate-900" />
+                        {MOBILE_WEEK_DAYS.map((day, index) => {
+                            const dayDate = getDayDate(index);
                             const isToday = new Date().toDateString() === dayDate.toDateString();
-                            const dayEvents = processedEventsByDay[dayIndex] || [];
-                            const sortedDayEvents = [...dayEvents].sort((a, b) => a.start - b.start);
-
                             return (
-                                <div key={day} className="flex flex-col min-h-0 bg-white dark:bg-slate-800 rounded-lg border border-slate-200/60 dark:border-slate-700 overflow-hidden">
-                                    {/* Day Header */}
-                                    <div className={`p-2 border-b border-slate-200/60 dark:border-slate-700 shrink-0 ${isToday ? 'bg-blue-50/50 dark:bg-blue-900/20' : 'bg-slate-50 dark:bg-slate-900'}`}>
-                                        <div className={`font-bold text-xs text-center ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                                            {day.substring(0, 3)}
-                                        </div>
-                                        <div className={`text-sm font-bold text-center ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`}>
-                                            {dayDate.getDate()}
-                                        </div>
-                                    </div>
-
-                                    {/* Day Events - Scrollable */}
-                                    <div className="flex-1 overflow-y-auto p-1.5 space-y-1.5">
-                                        {sortedDayEvents.length === 0 ? (
-                                            <div className="text-center py-4 text-slate-400 dark:text-slate-500 text-xs">
-                                                Aucun cours
-                                            </div>
-                                        ) : (
-                                            sortedDayEvents.map((evt, idx) => {
-                                                const colors = getEventColors(evt);
-                                                const startTime = evt.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                                                const endTime = evt.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-
-                                                return (
-                                                    <div
-                                                        key={idx}
-                                                        onClick={() => setSelectedEvent(evt)}
-                                                        className={`${colors.bg} border ${colors.border} rounded-md p-2 ${colors.text} cursor-pointer active:scale-95 transition-all`}
-                                                    >
-                                                        <div className="text-[10px] font-bold leading-tight mb-1" style={{ wordBreak: 'break-word' }}>
-                                                            {evt.title}
-                                                        </div>
-                                                        <div className="text-[9px] opacity-80 font-medium">
-                                                            {startTime}
-                                                        </div>
-                                                        <div className="text-[8px] opacity-60 mt-0.5">
-                                                            {endTime}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })
-                                        )}
-                                    </div>
+                                <div key={day} className={`py-2 text-center border-l border-slate-200/60 dark:border-slate-700 ${isToday ? 'bg-blue-50/50 dark:bg-blue-900/20' : 'bg-slate-50 dark:bg-slate-900'}`}>
+                                    <div className={`text-[10px] font-bold ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`}>{day}</div>
+                                    <div className={`text-sm font-bold ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'}`}>{dayDate.getDate()}</div>
                                 </div>
                             );
                         })}
+                    </div>
+
+                    {/* Scrollable time grid */}
+                    <div className="flex-1 overflow-y-auto">
+                        <div className="grid grid-cols-[28px_repeat(5,1fr)] w-full">
+                            {HOURS.map(hour => (
+                                <React.Fragment key={hour}>
+                                    <div className="border-b border-slate-100 dark:border-slate-700 text-[9px] text-slate-400 dark:text-slate-500 text-right pr-1 h-10 -mt-1.5 select-none">
+                                        {hour}h
+                                    </div>
+                                    {Array.from({ length: 5 }).map((_, dayIndex) => {
+                                        const hourEvents = processedEventsByDay[dayIndex].filter(e => e.start.getHours() === hour);
+                                        return (
+                                            <div key={dayIndex} className="border-b border-l border-slate-100 dark:border-slate-700 h-10 relative">
+                                                {hourEvents.map((evt, idx) => {
+                                                    const colors = getEventColors(evt);
+                                                    const startMinutes = evt.start.getMinutes();
+                                                    const topOffset = (startMinutes / 60) * 100;
+                                                    const durationHours = (evt.end - evt.start) / (1000 * 60 * 60);
+                                                    const height = durationHours * 100;
+                                                    const width = 100 / evt.totalColumns;
+                                                    const left = evt.column * width;
+
+                                                    return (
+                                                        <div
+                                                            key={idx}
+                                                            onClick={() => setSelectedEvent(evt)}
+                                                            className={`absolute ${colors.bg} border ${colors.border} ${colors.text} rounded p-0.5 cursor-pointer active:scale-95 transition-all overflow-hidden`}
+                                                            style={{
+                                                                top: `calc(${topOffset}% + 1px)`,
+                                                                left: `calc(${left}% + 1px)`,
+                                                                width: `calc(${width}% - 2px)`,
+                                                                height: `calc(${height}% - 2px)`,
+                                                                minHeight: '16px',
+                                                                zIndex: 1
+                                                            }}
+                                                        >
+                                                            <div className="text-[8px] font-bold leading-tight truncate">{evt.title}</div>
+                                                            <div className="text-[7px] opacity-75 truncate">{evt.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        );
+                                    })}
+                                </React.Fragment>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
