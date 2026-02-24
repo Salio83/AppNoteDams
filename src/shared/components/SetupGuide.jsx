@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Calendar, ChevronRight, ExternalLink } from 'lucide-react';
-import entEdtImg from '../../../assets/ent-edt.png';
-import icalImg from '../../../assets/ical.png';
-import kronoTutoImg from '../../../assets/krono-tuto.png';
+
+const entEdtImg = '/ent-edt.png';
+const icalImg = '/ical.png';
+const kronoTutoImg = '/krono-tuto.png';
 
 /**
  * Guide affiché quand l'utilisateur n'a pas de configuration UE
