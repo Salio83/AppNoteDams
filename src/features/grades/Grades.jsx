@@ -276,7 +276,7 @@ const Grades = () => {
                                     type="number"
                                     min="0"
                                     max="20"
-                                    step="0.1"
+                                    step="0.01"
                                     value={grade}
                                     onChange={(e) => setGrade(e.target.value)}
                                     className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 dark:text-slate-200 py-2.5 px-3"

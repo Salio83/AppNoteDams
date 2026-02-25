@@ -127,7 +127,7 @@ const Home = () => {
         };
 
         loadData();
-    }, [user]);
+    }, [user, ues]);
 
     // Get UE name by id
     const getUEName = (ueId) => {
