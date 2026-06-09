@@ -7,15 +7,13 @@ services:
     container_name: appnote-frontend
     restart: always
     ports:
-      - "80:80"
-      - "443:443"
+      - "${INTERNAL_PORT}:80"
     environment:
       - VITE_BACKEND_TARGET=http://backend:3000
-    volumes:
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
     depends_on:
       - backend
+    networks:
+      - appnote_net
 
   # Service Backend (Node.js + Prisma)
   backend:
@@ -28,13 +26,14 @@ services:
       - ./prisma:/app/prisma # Persistance de la base SQLite
     environment:
       - PORT=3000
-      - DATABASE_URL=file:./dev.db
+      - DATABASE_URL=file:/app/prisma/dev.db
       - BETTER_AUTH_URL=https://krono-etu.com
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - BETTER_AUTH_TRUSTED_ORIGINS=https://krono-etu.com,http://localhost
+    networks:
+      - appnote_net
     # Le backend reste interne au réseau Docker (accessible via http://backend:3000)
 
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
+networks:
+  appnote_net:
+    driver: bridge
