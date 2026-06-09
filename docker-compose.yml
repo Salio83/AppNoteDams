@@ -1,0 +1,41 @@
+services:
+  # Service Frontend (Nginx Production)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: appnote-frontend
+    restart: always
+    ports:
+      - "85:80"
+      - "445:443"
+    environment:
+      - VITE_BACKEND_TARGET=http://backend:3000
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    depends_on:
+      - backend
+
+  # Service Backend (Node.js + Prisma)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: appnote-backend
+    restart: always
+    volumes:
+      - ./prisma:/app/prisma # Persistance de la base SQLite
+    environment:
+      - PORT=3000
+      - DATABASE_URL=file:./dev.db
+      - BETTER_AUTH_URL=https://krono-etu.com
+      - BETTER_AUTH_TRUSTED_ORIGINS=https://krono-etu.com,http://localhost
+    # Le backend reste interne au réseau Docker (accessible via http://backend:3000)
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
