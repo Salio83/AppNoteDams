@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import ICAL from 'ical.js';
 import { detectExams, calculateHoursBySubject } from '../utils/scheduleAnalysis';
-import allUEs from '../../../config_ue.json';
+import allUEs from '@config/ue.json';
 import { api } from '../services/api';
 import { useAuth } from './AuthContext';
 

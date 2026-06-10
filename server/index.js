@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import "dotenv/config";
 import { toNodeHandler } from "better-auth/node";
-import { auth } from "../src/lib/auth.js";
+import { auth } from "../src/shared/services/auth.js";
 import { PrismaClient } from "@prisma/client";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load UE configuration
-const configPath = path.join(__dirname, "../config_ue.json");
+const configPath = path.join(__dirname, "../config/ue.json");
 const ALL_UES = JSON.parse(fs.readFileSync(configPath, "utf8"));
 
 const prisma = new PrismaClient();

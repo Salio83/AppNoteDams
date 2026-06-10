@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useSchedule } from '../context/ScheduleContext';
-import allUEs from '../../../config_ue.json';
+import allUEs from '@config/ue.json';
 
 /**
  * Hook qui retourne les UEs uniquement si le profil utilisateur correspond
