@@ -43,7 +43,8 @@ services:
 # ─── Volumes nommés ────────────────────────────────────────────────────────────
 volumes:
   appnote-db:
-    name: appnote-db   # Persiste entre les rebuilds et les git pull
+    external: true   # Créé manuellement : docker volume create appnote-db
+
 
 # ─── Réseaux isolés ────────────────────────────────────────────────────────────
 networks:
