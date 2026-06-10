@@ -26,6 +26,7 @@ dist-ssr
 # Secrets & environnement
 .env
 .env.*
+!.env.example   # Template documenté — peut être commité
 
 # Base de données SQLite locale (ne jamais commiter)
 prisma/dev.db
@@ -43,3 +44,9 @@ DOKKU_SCALE
 
 # Fichiers non pertinents
 *.pdf
+
+# Anciens fichiers d'infrastructure remplacés
+deploy.ps1
+Dockerfile.frontend
+nginx.conf
+nginx_conf.template

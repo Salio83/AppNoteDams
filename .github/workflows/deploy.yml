@@ -1,0 +1,44 @@
+name: 🚀 Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔑 Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+
+            echo "📥 Pull des dernières modifications..."
+            cd ~/appnotedams
+            git pull origin main
+
+            echo "🏗️  Build et redémarrage des containers..."
+            docker compose up --build -d
+
+            echo "⏳ Attente du health check (max 60s)..."
+            for i in $(seq 1 12); do
+              if docker inspect --format='{{.State.Health.Status}}' appnote-backend 2>/dev/null | grep -q "healthy"; then
+                echo "✅ Backend healthy"
+                break
+              fi
+              echo "  ... attente ($i/12)"
+              sleep 5
+            done
+
+            echo "📊 État des containers :"
+            docker compose ps
+
+            echo ""
+            echo "✅ Déploiement terminé avec succès !"

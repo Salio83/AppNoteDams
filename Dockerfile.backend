@@ -1,33 +1,48 @@
-# Utilisation d'une image Node.js légère
-FROM node:20-alpine
+# ─── Stage 1 : Build du frontend React/Vite ───────────────────────────────────
+FROM node:20-alpine AS frontend-build
 
 WORKDIR /app
 
-# Installation des outils système nécessaires (openssl pour Prisma)
-RUN apk add --no-cache openssl
-
-# Copie des fichiers de dépendances
 COPY package*.json ./
-
-# Installation des dépendances (inclut Prisma CLI)
 RUN npm ci
 
-# Copie du schéma de la base de données
-COPY prisma/ ./prisma/
+COPY . .
+RUN npm run build
 
-# Génération du client Prisma (nécessaire pour interagir avec SQLite/Postgres)
+# ─── Stage 2 : Backend de production ──────────────────────────────────────────
+FROM node:20-alpine AS backend
+
+WORKDIR /app
+
+# Dépendances système requises par Prisma
+RUN apk add --no-cache openssl
+
+# Installation des dépendances Node (prod + dev pour prisma generate)
+COPY package*.json ./
+RUN npm ci
+
+# Schéma et migrations Prisma (intégrés dans l'image, pas en bind-mount)
+COPY prisma/schema.prisma ./prisma/schema.prisma
+COPY prisma/migrations    ./prisma/migrations
+
+# Génération du client Prisma
 RUN npx prisma generate
 
-# Nettoyage pour ne garder que les dépendances de production
-RUN npm prune --production
+# Nettoyage des devDependencies
+RUN npm prune --omit=dev
 
-# Copie du code du serveur et des bibliothèques nécessaires
-COPY server/ ./server/
-COPY src/lib/ ./src/lib/
+# Code du serveur
+COPY server/      ./server/
+COPY src/lib/     ./src/lib/
 COPY config_ue.json ./
 
-# Le backend écoute sur le port 3000
+# Frontend buildé depuis le stage 1
+COPY --from=frontend-build /app/dist ./dist
+
+# Script de démarrage
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
 EXPOSE 3000
 
-# Script de démarrage : applique les migrations puis lance le serveur
-CMD ["sh", "-c", "npx prisma migrate deploy && node server/index.js"]
+CMD ["./docker-entrypoint.sh"]

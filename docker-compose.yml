@@ -1,39 +1,53 @@
 services:
-  # Service Frontend (Nginx Production)
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    container_name: appnote-frontend
-    restart: always
-    ports:
-      - "${INTERNAL_PORT}:80"
-    environment:
-      - VITE_BACKEND_TARGET=http://backend:3000
-    depends_on:
-      - backend
-    networks:
-      - appnote_net
-
-  # Service Backend (Node.js + Prisma)
-  backend:
+  # ─── Backend Node.js (sert l'API + les fichiers statiques buildés) ───────────
+  api:
     build:
       context: .
       dockerfile: Dockerfile.backend
     container_name: appnote-backend
-    restart: always
-    volumes:
-      - ./prisma:/app/prisma # Persistance de la base SQLite
+    restart: unless-stopped
     environment:
       - PORT=3000
-      - DATABASE_URL=file:/app/prisma/dev.db
+      - DATABASE_URL=file:/data/dev.db
       - BETTER_AUTH_URL=${BETTER_AUTH_URL}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - BETTER_AUTH_TRUSTED_ORIGINS=${BETTER_AUTH_TRUSTED_ORIGINS}
+      - NODE_ENV=production
+    volumes:
+      - appnote-db:/data   # Volume nommé — jamais écrasé par git pull
     networks:
-      - appnote_net
-    # Le backend reste interne au réseau Docker (accessible via http://backend:3000)
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
+  # ─── Proxy Nginx (seul point d'entrée exposé) ────────────────────────────────
+  proxy:
+    image: nginx:stable-alpine
+    container_name: appnote-proxy
+    restart: unless-stopped
+    ports:
+      - "${INTERNAL_PORT:-8083}:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - public
+      - backend
+
+# ─── Volumes nommés ────────────────────────────────────────────────────────────
+volumes:
+  appnote-db:
+    name: appnote-db   # Persiste entre les rebuilds et les git pull
+
+# ─── Réseaux isolés ────────────────────────────────────────────────────────────
 networks:
-  appnote_net:
-    driver: bridge
+  public:
+    driver: bridge     # nginx-proxy uniquement
+  backend:
+    driver: bridge     # api + nginx-proxy (api non accessible depuis l'extérieur)

@@ -74,6 +74,18 @@ const requireAuth = async (req, res, next) => {
 
 // API Routes
 
+// --- Health Check (utilisé par Docker pour vérifier que le backend est prêt) ---
+
+app.get("/api/health", async (req, res) => {
+    try {
+        // Vérifie que la DB répond
+        await prisma.$queryRaw`SELECT 1`;
+        res.json({ status: "ok", timestamp: new Date().toISOString() });
+    } catch (e) {
+        res.status(503).json({ status: "error", error: e.message });
+    }
+});
+
 // --- Grades ---
 
 app.get("/api/grades", requireAuth, async (req, res) => {
