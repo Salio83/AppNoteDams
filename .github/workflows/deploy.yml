@@ -22,6 +22,8 @@ jobs:
 
             echo "📥 Pull des dernières modifications..."
             cd ~/appnotedams
+            git reset --hard
+            git clean -fd
             git pull origin main
 
             echo "🏗️  Build et redémarrage des containers..."
