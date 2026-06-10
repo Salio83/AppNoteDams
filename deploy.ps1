@@ -13,7 +13,7 @@ Write-Host "--- 3. Transfert des dossiers sources ---" -ForegroundColor Cyan
 scp -r src "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/"
 scp -r server "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/"
 scp -r public "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/"
-scp -r prisma "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/"
+scp -r prisma/schema.prisma prisma/migrations "$($SERVER_USER)@$($SERVER_IP):$($SERVER_PATH)/prisma/"
 
 Write-Host "--- 4. Build et Redémarrage Docker sur le serveur ---" -ForegroundColor Cyan
 ssh $SERVER_USER@$SERVER_IP "cd $SERVER_PATH && docker compose down && docker compose up --build -d"
