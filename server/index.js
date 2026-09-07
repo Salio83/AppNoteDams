@@ -12,9 +12,12 @@ import fs from "fs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load UE configuration
-const configPath = path.join(__dirname, "../config/ue.json");
-const ALL_UES = JSON.parse(fs.readFileSync(configPath, "utf8"));
+// Load UE configuration per filière/année
+const UE_CONFIGS = {
+    "DaMS_3A": JSON.parse(fs.readFileSync(path.join(__dirname, "../config/ue.json"), "utf8")),
+    "DaMS_4A": JSON.parse(fs.readFileSync(path.join(__dirname, "../config/ue_dams_4a.json"), "utf8")),
+};
+const getUEsFor = (filiere, annee) => UE_CONFIGS[`${filiere}_${annee}`] || [];
 
 const prisma = new PrismaClient();
 const app = express();
@@ -164,7 +167,7 @@ app.get("/api/grades/rankings", requireAuth, async (req, res) => {
         }
 
         // 2. Filter config by semester
-        const semesterUEs = ALL_UES.filter(ue => ue.semester === semester);
+        const semesterUEs = getUEsFor(currentUser.filiere, currentUser.annee).filter(ue => ue.semester === semester);
         const ueCategories = [...new Set(semesterUEs.map(ue => ue.category))];
 
         // 3. Helper to calculate stats for a user

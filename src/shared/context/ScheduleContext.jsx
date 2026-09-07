@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import ICAL from 'ical.js';
 import { detectExams, calculateHoursBySubject } from '../utils/scheduleAnalysis';
 import allUEs from '@config/ue.json';
+import damsUEs4A from '@config/ue_dams_4a.json';
 import { api } from '../services/api';
 import { useAuth } from './AuthContext';
 
@@ -10,7 +11,7 @@ const ScheduleContext = createContext(null);
 const AUTO_REFRESH_INTERVAL = 2 * 60 * 60 * 1000; // Recharger toutes les 2 heures
 
 // UEs configurées par filière+année (seule DaMS 3A existe pour l'instant)
-const UE_CONFIGS = { 'DaMS_3A': allUEs };
+const UE_CONFIGS = { 'DaMS_3A': allUEs, 'DaMS_4A': damsUEs4A };
 
 /**
  * Provider pour gérer l'état global de l'emploi du temps

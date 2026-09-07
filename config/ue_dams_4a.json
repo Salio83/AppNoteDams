@@ -1,0 +1,380 @@
+[
+    {
+        "id": 700,
+        "category": "UE APPLICATIONS WEB ET DONNÉES DISTRIBUÉES",
+        "nom": "Applications Web interactive",
+        "coef_ue": 0,
+        "semester": 1
+    },
+    {
+        "id": 701,
+        "category": "UE APPLICATIONS WEB ET DONNÉES DISTRIBUÉES",
+        "nom": "Projet Applications Web interactive",
+        "aliases": [
+            "Projet Web interactive"
+        ],
+        "coef_ue": 3,
+        "semester": 1
+    },
+    {
+        "id": 702,
+        "category": "UE APPLICATIONS WEB ET DONNÉES DISTRIBUÉES",
+        "nom": "Kubernetes",
+        "coef_ue": 1,
+        "semester": 1
+    },
+    {
+        "id": 703,
+        "category": "UE APPLICATIONS WEB ET DONNÉES DISTRIBUÉES",
+        "nom": "Gestion de projet appliqué",
+        "aliases": [
+            "Gestion de projet"
+        ],
+        "coef_ue": 0.5,
+        "semester": 1
+    },
+    {
+        "id": 704,
+        "category": "UE APPLICATIONS WEB ET DONNÉES DISTRIBUÉES",
+        "nom": "BD Distribuées et NoSql",
+        "aliases": [
+            "BD Distribuées",
+            "NoSQL"
+        ],
+        "coef_ue": 2,
+        "semester": 1
+    },
+    {
+        "id": 705,
+        "category": "UE APPLICATIONS WEB ET DONNÉES DISTRIBUÉES",
+        "nom": "Entrepôts de Données",
+        "coef_ue": 1,
+        "semester": 1
+    },
+    {
+        "id": 710,
+        "category": "UE SOFTWARE ARCHITECTURE & ALGORITHMS",
+        "nom": "Software Design",
+        "coef_ue": 2.5,
+        "semester": 1
+    },
+    {
+        "id": 711,
+        "category": "UE SOFTWARE ARCHITECTURE & ALGORITHMS",
+        "nom": "Software Engineering Practices",
+        "coef_ue": 1,
+        "semester": 1
+    },
+    {
+        "id": 712,
+        "category": "UE SOFTWARE ARCHITECTURE & ALGORITHMS",
+        "nom": "Exploring Software Architectures",
+        "coef_ue": 1,
+        "semester": 1
+    },
+    {
+        "id": 713,
+        "category": "UE SOFTWARE ARCHITECTURE & ALGORITHMS",
+        "nom": "Algorithmique avancée 1",
+        "coef_ue": 1.5,
+        "semester": 1
+    },
+    {
+        "id": 714,
+        "category": "UE SOFTWARE ARCHITECTURE & ALGORITHMS",
+        "nom": "Programmation avancée",
+        "coef_ue": 1.5,
+        "semester": 1
+    },
+    {
+        "id": 720,
+        "category": "UE SCIENCE DES DONNÉES ET INTELLIGENCE ARTIFICIELLE",
+        "nom": "Systèmes de recommandation",
+        "coef_ue": 0.5,
+        "semester": 1
+    },
+    {
+        "id": 721,
+        "category": "UE SCIENCE DES DONNÉES ET INTELLIGENCE ARTIFICIELLE",
+        "nom": "Artificial Intelligence and Multi-agent Systems",
+        "aliases": [
+            "AI & Multi-agent Systems"
+        ],
+        "coef_ue": 1.5,
+        "semester": 1
+    },
+    {
+        "id": 722,
+        "category": "UE SCIENCE DES DONNÉES ET INTELLIGENCE ARTIFICIELLE",
+        "nom": "Projet data science et intelligence artificielle",
+        "aliases": [
+            "Projet data science & IA"
+        ],
+        "coef_ue": 1.5,
+        "semester": 1
+    },
+    {
+        "id": 723,
+        "category": "UE SCIENCE DES DONNÉES ET INTELLIGENCE ARTIFICIELLE",
+        "nom": "Apprentissage statistique",
+        "coef_ue": 1.5,
+        "semester": 1
+    },
+    {
+        "id": 724,
+        "category": "UE SCIENCE DES DONNÉES ET INTELLIGENCE ARTIFICIELLE",
+        "nom": "DeepLearning",
+        "aliases": [
+            "Deep Learning"
+        ],
+        "coef_ue": 1,
+        "semester": 1
+    },
+    {
+        "id": 725,
+        "category": "UE SCIENCE DES DONNÉES ET INTELLIGENCE ARTIFICIELLE",
+        "nom": "Intelligence Artificielle générative",
+        "aliases": [
+            "IA générative"
+        ],
+        "coef_ue": 0.5,
+        "semester": 1
+    },
+    {
+        "id": 726,
+        "category": "UE SCIENCE DES DONNÉES ET INTELLIGENCE ARTIFICIELLE",
+        "nom": "Fondamentaux du machine learning",
+        "aliases": [
+            "Machine Learning"
+        ],
+        "coef_ue": 1.5,
+        "semester": 1
+    },
+    {
+        "id": 730,
+        "category": "UE PILOTAGE DE L'ENTREPRISE ET COMMUNICATION INTERNATIONALE",
+        "nom": "Finance d'entreprise",
+        "coef_ue": 2.5,
+        "semester": 1
+    },
+    {
+        "id": 731,
+        "category": "UE PILOTAGE DE L'ENTREPRISE ET COMMUNICATION INTERNATIONALE",
+        "nom": "Management SI",
+        "coef_ue": 1.5,
+        "semester": 1
+    },
+    {
+        "id": 732,
+        "category": "UE PILOTAGE DE L'ENTREPRISE ET COMMUNICATION INTERNATIONALE",
+        "nom": "Atelier Management Responsable",
+        "coef_ue": 0,
+        "semester": 1
+    },
+    {
+        "id": 733,
+        "category": "UE PILOTAGE DE L'ENTREPRISE ET COMMUNICATION INTERNATIONALE",
+        "nom": "Validation expérience professionnelle",
+        "coef_ue": 0,
+        "semester": 1
+    },
+    {
+        "id": 734,
+        "category": "UE PILOTAGE DE L'ENTREPRISE ET COMMUNICATION INTERNATIONALE",
+        "nom": "Insertion professionnelle internationale",
+        "coef_ue": 0,
+        "semester": 1
+    },
+    {
+        "id": 735,
+        "category": "UE PILOTAGE DE L'ENTREPRISE ET COMMUNICATION INTERNATIONALE",
+        "nom": "Langue et culture : Anglais 4A",
+        "aliases": [
+            "Anglais"
+        ],
+        "coef_ue": 2,
+        "semester": 1
+    },
+    {
+        "id": 736,
+        "category": "UE PILOTAGE DE L'ENTREPRISE ET COMMUNICATION INTERNATIONALE",
+        "nom": "Préparation au niveau C1 de la certification en anglais (TOEIC)",
+        "aliases": [
+            "TOEIC"
+        ],
+        "coef_ue": 0,
+        "semester": 1
+    },
+    {
+        "id": 740,
+        "category": "UE TRANSITION ÉCOLOGIQUE ET DÉVELOPPEMENT SOUTENABLE",
+        "nom": "Cartographie des contreverses",
+        "coef_ue": 1,
+        "semester": 1
+    },
+    {
+        "id": 741,
+        "category": "UE TRANSITION ÉCOLOGIQUE ET DÉVELOPPEMENT SOUTENABLE",
+        "nom": "Conférences d'ouverture aux enjeux de transitions",
+        "coef_ue": 0,
+        "semester": 1
+    },
+    {
+        "id": 800,
+        "category": "UE CONCEPTION LOGICIELLE AVANCÉE",
+        "nom": "Rust, Test, métriques, qualités",
+        "aliases": [
+            "Rust"
+        ],
+        "coef_ue": 0,
+        "semester": 2
+    },
+    {
+        "id": 801,
+        "category": "UE CONCEPTION LOGICIELLE AVANCÉE",
+        "nom": "Projet Rust",
+        "coef_ue": 2,
+        "semester": 2
+    },
+    {
+        "id": 802,
+        "category": "UE CONCEPTION LOGICIELLE AVANCÉE",
+        "nom": "Développement d'applications mobiles",
+        "aliases": [
+            "Dev mobile"
+        ],
+        "coef_ue": 0,
+        "semester": 2
+    },
+    {
+        "id": 803,
+        "category": "UE CONCEPTION LOGICIELLE AVANCÉE",
+        "nom": "Projet développement mobile",
+        "aliases": [
+            "Projet mobile"
+        ],
+        "coef_ue": 2,
+        "semester": 2
+    },
+    {
+        "id": 804,
+        "category": "UE CONCEPTION LOGICIELLE AVANCÉE",
+        "nom": "Théories des jeux et du choix social",
+        "aliases": [
+            "Théorie des jeux"
+        ],
+        "coef_ue": 1,
+        "semester": 2
+    },
+    {
+        "id": 805,
+        "category": "UE CONCEPTION LOGICIELLE AVANCÉE",
+        "nom": "Algorithmique avancée 2",
+        "coef_ue": 1,
+        "semester": 2
+    },
+    {
+        "id": 810,
+        "category": "UE DONNÉES COMPLEXES ET SYSTÈMES INTELLIGENTS",
+        "nom": "Statistique computationnelle",
+        "coef_ue": 1,
+        "semester": 2
+    },
+    {
+        "id": 811,
+        "category": "UE DONNÉES COMPLEXES ET SYSTÈMES INTELLIGENTS",
+        "nom": "Bases de données spatiales et vectorielles",
+        "coef_ue": 1,
+        "semester": 2
+    },
+    {
+        "id": 812,
+        "category": "UE DONNÉES COMPLEXES ET SYSTÈMES INTELLIGENTS",
+        "nom": "Agentic AI & Agent orchestration",
+        "coef_ue": 1,
+        "semester": 2
+    },
+    {
+        "id": 820,
+        "category": "UE INNOVATION ET COMMUNICATION",
+        "nom": "Simulation d'entreprise",
+        "coef_ue": 1.5,
+        "semester": 2
+    },
+    {
+        "id": 821,
+        "category": "UE INNOVATION ET COMMUNICATION",
+        "nom": "Insertion Professionnelle",
+        "coef_ue": 1.5,
+        "semester": 2
+    },
+    {
+        "id": 822,
+        "category": "UE INNOVATION ET COMMUNICATION",
+        "nom": "Marketing et innovation",
+        "coef_ue": 1,
+        "semester": 2
+    },
+    {
+        "id": 823,
+        "category": "UE INNOVATION ET COMMUNICATION",
+        "nom": "Design Thinking",
+        "coef_ue": 0,
+        "semester": 2
+    },
+    {
+        "id": 824,
+        "category": "UE INNOVATION ET COMMUNICATION",
+        "nom": "Langue et culture : Anglais 4A",
+        "aliases": [
+            "Anglais"
+        ],
+        "coef_ue": 1,
+        "semester": 2
+    },
+    {
+        "id": 825,
+        "category": "UE INNOVATION ET COMMUNICATION",
+        "nom": "Conférences d'ouverture aux enjeux de transitions",
+        "coef_ue": 0,
+        "semester": 2
+    },
+    {
+        "id": 826,
+        "category": "UE INNOVATION ET COMMUNICATION",
+        "nom": "Préparation certification en anglais 4A",
+        "aliases": [
+            "TOEIC"
+        ],
+        "coef_ue": 0,
+        "semester": 2
+    },
+    {
+        "id": 830,
+        "category": "UE OPTION 1 : STAGE COURT DE 4ÈME ANNÉE",
+        "nom": "Stage de 4ème année",
+        "coef_ue": 8,
+        "semester": 2
+    },
+    {
+        "id": 831,
+        "category": "UE OPTION 1 : STAGE COURT DE 4ÈME ANNÉE",
+        "nom": "Projet industriel de 4ème année",
+        "coef_ue": 7.5,
+        "semester": 2
+    },
+    {
+        "id": 832,
+        "category": "UE OPTION 1 : STAGE COURT DE 4ÈME ANNÉE",
+        "nom": "Livrables professionnels",
+        "coef_ue": 0.5,
+        "semester": 2
+    },
+    {
+        "id": 840,
+        "category": "UE OPTION 2 : STAGE LONG DE 4ÈME ANNÉE",
+        "nom": "Stage de 4ème année",
+        "coef_ue": 16,
+        "semester": 2
+    }
+]
