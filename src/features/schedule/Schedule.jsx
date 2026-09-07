@@ -102,7 +102,7 @@ const calculateEventColumns = (events) => {
     return result;
 };
 
-const DayColumn = ({ label, isToday, dayEvents }) => {
+const DayColumn = ({ label, isToday, dayEvents, onSelectEvent }) => {
     const processed = useMemo(() => calculateEventColumns(dayEvents), [dayEvents]);
     const gaps = useMemo(() => computeGaps(dayEvents), [dayEvents]);
 
@@ -139,9 +139,11 @@ const DayColumn = ({ label, isToday, dayEvents }) => {
                     const left = evt.column * width;
 
                     return (
-                        <div
+                        <button
                             key={idx}
-                            className="absolute rounded-[14px] overflow-hidden"
+                            type="button"
+                            onClick={() => onSelectEvent(evt)}
+                            className="absolute rounded-[14px] overflow-hidden text-left cursor-pointer transition-opacity hover:opacity-90"
                             style={{
                                 top,
                                 left: `calc(${left}% + 4px)`,
@@ -149,7 +151,8 @@ const DayColumn = ({ label, isToday, dayEvents }) => {
                                 height,
                                 background: style.bg,
                                 color: style.ink,
-                                padding: '8px 10px'
+                                padding: '8px 10px',
+                                border: 'none'
                             }}
                         >
                             <div className="text-[13px] font-semibold leading-tight truncate">{evt.title}</div>
@@ -159,7 +162,7 @@ const DayColumn = ({ label, isToday, dayEvents }) => {
                                 {evt.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                             </div>
                             {evt.location && <div className="text-[11px] opacity-80 truncate">{evt.location}</div>}
-                        </div>
+                        </button>
                     );
                 })}
             </div>
@@ -180,6 +183,14 @@ const Schedule = () => {
         const today = new Date().getDay();
         return today >= 1 && today <= 5 ? today - 1 : 0;
     });
+    const [selectedEvent, setSelectedEvent] = useState(null);
+
+    useEffect(() => {
+        if (!selectedEvent) return;
+        const handleKeyDown = (e) => { if (e.key === 'Escape') setSelectedEvent(null); };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [selectedEvent]);
 
     const parsedEvents = useMemo(() => events.map(e => ({
         ...e,
@@ -321,6 +332,7 @@ const Schedule = () => {
                                 label={`${WEEK_DAYS_SHORT[i]} ${dayDate.getDate()}`}
                                 isToday={isToday}
                                 dayEvents={eventsByWeekday[i]}
+                                onSelectEvent={setSelectedEvent}
                             />
                         );
                     })}
@@ -335,6 +347,60 @@ const Schedule = () => {
                     weekGaps.map((label, i) => <p key={i}>{label}</p>)
                 )}
             </div>
+
+            {selectedEvent && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn"
+                    style={{ background: 'rgba(0,0,0,0.4)' }}
+                    onClick={() => setSelectedEvent(null)}
+                >
+                    <div
+                        className="rounded-[28px] bg-surface w-full overflow-hidden animate-slideUp"
+                        style={{ maxWidth: 420 }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="p-5" style={{ background: getEventStyle(selectedEvent).bg, color: getEventStyle(selectedEvent).ink }}>
+                            <div className="flex items-start justify-between gap-4">
+                                <h3 className="font-display text-[22px] leading-tight">{selectedEvent.title}</h3>
+                                <button onClick={() => setSelectedEvent(null)} className="text-sm shrink-0 opacity-75 hover:opacity-100">
+                                    Fermer
+                                </button>
+                            </div>
+                            <p className="text-sm opacity-80 mt-1 capitalize">
+                                {selectedEvent.start.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                            </p>
+                        </div>
+                        <div className="p-5">
+                            <div className="flex items-center justify-between py-2.5 border-b border-rule">
+                                <span className="text-muted text-sm">Horaire</span>
+                                <span className="tabular-nums">
+                                    {selectedEvent.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                    {' – '}
+                                    {selectedEvent.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between py-2.5 border-b border-rule">
+                                <span className="text-muted text-sm">Durée</span>
+                                <span className="tabular-nums">
+                                    {formatDurationShort((selectedEvent.end - selectedEvent.start) / (1000 * 60 * 60))}
+                                </span>
+                            </div>
+                            {selectedEvent.location && (
+                                <div className="flex items-center justify-between py-2.5 border-b border-rule last:border-b-0">
+                                    <span className="text-muted text-sm">Salle</span>
+                                    <span>{selectedEvent.location}</span>
+                                </div>
+                            )}
+                            {selectedEvent.description && (
+                                <div className="pt-3">
+                                    <p className="text-muted text-sm mb-1">Informations</p>
+                                    <p className="text-sm whitespace-pre-wrap">{selectedEvent.description}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
