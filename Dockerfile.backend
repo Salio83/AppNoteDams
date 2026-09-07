@@ -34,7 +34,7 @@ RUN npm prune --omit=dev
 # Code du serveur
 COPY server/      ./server/
 COPY src/shared/services/auth.js ./src/shared/services/auth.js
-COPY config/ue.json ./config/ue.json
+COPY config/ ./config/
 
 # Frontend buildé depuis le stage 1
 COPY --from=frontend-build /app/dist ./dist
