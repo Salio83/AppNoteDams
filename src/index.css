@@ -4,66 +4,72 @@
 
 @layer base {
   :root {
-    --color-bg: 248 250 252;
-    --color-surface: 255 255 255;
-    --color-text: 15 23 42;
-    --color-text-muted: 100 116 139;
-    --color-border: 226 232 240;
+    --bg: #f5ead8;
+    --surface: #ebddc5;
+    --ink: #201e1d;
+    --muted: #645c50;
+    --accent: #8c491a;
+    --accent-solid: #c67139;
+    --rule: rgba(32, 30, 29, .13);
+
+    --t1-bg: #ffe1d0;
+    --t1-ink: #8c491a;
+    --t2-bg: #e1eecc;
+    --t2-ink: #56633f;
+    --t3-bg: #eee7db;
+    --t3-ink: #645c50;
+    --t4-bg: #ffc6a5;
+    --t4-ink: #643312;
   }
 
   .dark {
-    --color-bg: 15 23 42;
-    --color-surface: 30 41 59;
-    --color-text: 248 250 252;
-    --color-text-muted: 148 163 184;
-    --color-border: 51 65 85;
+    --bg: #201e1d;
+    --surface: #2e2b25;
+    --ink: #f5ead8;
+    --muted: #c0b6a5;
+    --accent: #ffc6a5;
+    --accent-solid: #f6a06b;
+    --rule: rgba(245, 234, 216, .15);
+
+    --t1-bg: #643312;
+    --t1-ink: #ffc6a5;
+    --t2-bg: #3d472b;
+    --t2-ink: #ccdbb2;
+    --t3-bg: #474238;
+    --t3-ink: #dcd3c4;
+    --t4-bg: #8c491a;
+    --t4-ink: #ffe1d0;
   }
 
   body {
-    @apply bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 antialiased transition-colors duration-300;
-    font-family: 'Inter', sans-serif;
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: 'Figtree', sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color .2s ease, color .2s ease;
   }
 
-  /* Responsive font scaling */
-  html {
-    font-size: 16px;
+  h1, h2, h3, .font-display {
+    font-family: 'Caprasimo', cursive;
+    font-weight: 400;
   }
 
-  @media (max-width: 640px) {
-    html {
-      font-size: 14px;
-    }
-  }
-}
-
-@layer components {
-
-  /* Responsive card layouts */
-  .card-grid {
-    @apply grid gap-4;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  input, select, textarea, button {
+    font-family: 'Figtree', sans-serif;
   }
 
-  @media (max-width: 640px) {
-    .card-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* Responsive tables */
-  .table-responsive {
-    @apply w-full overflow-x-auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .table-responsive table {
-    @apply min-w-full;
+  :focus-visible {
+    outline: 2px solid var(--accent-solid);
+    outline-offset: 2px;
   }
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -71,11 +77,8 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-200 dark:bg-slate-700 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-300 dark:bg-slate-600;
+  background-color: var(--rule);
+  border-radius: 999px;
 }
 
 /* Mobile touch improvements */
@@ -97,14 +100,13 @@
   }
 }
 
-/* Hide scrollbar on mobile for cleaner look */
 @media (max-width: 640px) {
   ::-webkit-scrollbar {
     width: 4px;
   }
 }
 
-/* Tile animations */
+/* Transitions douces pour les modales */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -118,12 +120,12 @@
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.95);
+    transform: translateY(12px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
@@ -132,5 +134,5 @@
 }
 
 .animate-slideUp {
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.25s ease-out;
 }

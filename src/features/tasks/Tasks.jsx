@@ -1,43 +1,55 @@
 import React, { useState } from 'react';
-import { ClipboardList, Calendar, Clock, Plus, Trash2, X, AlertTriangle } from 'lucide-react';
 import { useTasks } from '../../shared/context/TasksContext';
+
+const getStatus = (daysUntil) => {
+    if (daysUntil < 0) return { label: 'Passé', urgent: false };
+    if (daysUntil <= 3) return { label: 'Urgent', urgent: true };
+    if (daysUntil <= 7) return { label: 'Cette semaine', urgent: false };
+    if (daysUntil <= 14) return { label: 'Bientôt', urgent: false };
+    return { label: 'À venir', urgent: false };
+};
+
+const TaskRow = ({ task, onDelete, faded }) => {
+    const status = getStatus(task.daysUntil);
+    return (
+        <div className={`flex items-center gap-4 py-3 border-b border-rule ${faded ? 'opacity-60' : ''}`}>
+            <span className="font-display text-[24px] tabular-nums shrink-0" style={{ minWidth: 64 }}>
+                {task.daysUntil < 0 ? '—' : `J-${task.daysUntil}`}
+            </span>
+            <div className="flex-1 min-w-0">
+                <p className="font-semibold truncate">{task.title}</p>
+                <p className="text-sm text-muted truncate">
+                    {new Date(task.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+            </div>
+            <span
+                className="text-[13px] uppercase shrink-0"
+                style={status.urgent ? { color: 'var(--accent)' } : { color: 'var(--muted)' }}
+            >
+                {status.label}
+            </span>
+            <button onClick={() => onDelete(task.id)} className="opacity-60 hover:opacity-100 shrink-0" title="Supprimer">
+                ×
+            </button>
+        </div>
+    );
+};
 
 const Tasks = () => {
     const { tasks, loading, error, addTask, deleteTask } = useTasks();
-    const [showForm, setShowForm] = useState(false);
-    const [selectedTask, setSelectedTask] = useState(null);
     const [formData, setFormData] = useState({ title: '', date: '', description: '' });
     const [submitting, setSubmitting] = useState(false);
-
-    const getUrgencyClass = (daysUntil) => {
-        if (daysUntil < 0) return 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400';
-        if (daysUntil <= 3) return 'bg-red-100 dark:bg-red-900/40 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200';
-        if (daysUntil <= 7) return 'bg-orange-100 dark:bg-orange-900/40 border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-200';
-        if (daysUntil <= 14) return 'bg-yellow-100 dark:bg-yellow-900/40 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200';
-        return 'bg-emerald-100 dark:bg-emerald-900/40 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200';
-    };
-
-    const getUrgencyBadge = (daysUntil) => {
-        if (daysUntil < 0) return { text: 'Passé', class: 'bg-slate-500' };
-        if (daysUntil <= 3) return { text: 'Urgent', class: 'bg-red-500' };
-        if (daysUntil <= 7) return { text: 'Cette semaine', class: 'bg-orange-500' };
-        if (daysUntil <= 14) return { text: 'Bientôt', class: 'bg-yellow-500' };
-        return { text: 'À venir', class: 'bg-emerald-500' };
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.title || !formData.date) return;
-
         setSubmitting(true);
         await addTask(formData);
         setFormData({ title: '', date: '', description: '' });
-        setShowForm(false);
         setSubmitting(false);
     };
 
-    const handleDelete = async (taskId, e) => {
-        e.stopPropagation();
+    const handleDelete = async (taskId) => {
         await deleteTask(taskId);
     };
 
@@ -46,297 +58,75 @@ const Tasks = () => {
 
     return (
         <div className="space-y-6">
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                        <ClipboardList className="w-6 h-6 text-indigo-500" />
-                        Mes Tâches
-                    </h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                        Examens et événements personnels (non affichés dans l'emploi du temps)
-                    </p>
-                </div>
-                <button
-                    onClick={() => setShowForm(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                    <Plus className="w-4 h-4" />
-                    Ajouter
-                </button>
+            <header>
+                <h2 className="font-display text-2xl">Tâches</h2>
+                <p className="text-muted text-sm mt-1">Examens et événements personnels</p>
             </header>
 
-            {error && (
-                <div className="bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 p-3 rounded-xl flex items-center gap-2 text-sm border border-amber-100 dark:border-amber-800">
-                    <AlertTriangle className="w-4 h-4" />
-                    {error}
-                </div>
-            )}
+            {error && <p className="text-sm" style={{ color: 'var(--accent)' }}>{error}</p>}
 
-            {/* Formulaire d'ajout */}
-            {showForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Nouvelle tâche</h3>
-                            <button
-                                onClick={() => setShowForm(false)}
-                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                            >
-                                <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-                            </button>
-                        </div>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                    Titre *
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.title}
-                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    placeholder="Ex: Soutenance de stage"
-                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                    Date *
-                                </label>
-                                <input
-                                    type="datetime-local"
-                                    value={formData.date}
-                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                    Description (optionnel)
-                                </label>
-                                <textarea
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    placeholder="Notes, lieu, préparation..."
-                                    rows={3}
-                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                />
-                            </div>
-                            <div className="flex gap-3 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowForm(false)}
-                                    className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                                >
-                                    Annuler
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-                                >
-                                    {submitting ? 'Ajout...' : 'Ajouter'}
-                                </button>
-                            </div>
-                        </form>
+            <form onSubmit={handleSubmit} className="rounded-[28px] bg-surface p-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="md:col-span-2">
+                        <label className="block text-[12px] text-muted mb-1.5">Intitulé</label>
+                        <input
+                            type="text"
+                            value={formData.title}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            placeholder="Ex: Soutenance de stage"
+                            className="w-full bg-bg rounded-full text-sm py-2.5 px-4"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[12px] text-muted mb-1.5">Échéance</label>
+                        <input
+                            type="datetime-local"
+                            value={formData.date}
+                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                            className="w-full bg-bg rounded-full text-sm py-2.5 px-4"
+                            required
+                        />
                     </div>
                 </div>
-            )}
+                <div className="mt-4 flex justify-end">
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        className="rounded-full px-6 py-2.5 text-sm font-semibold disabled:opacity-50"
+                        style={{ background: 'var(--accent-solid)', color: 'var(--bg)' }}
+                    >
+                        {submitting ? 'Ajout…' : 'Ajouter'}
+                    </button>
+                </div>
+            </form>
 
             {loading ? (
-                <div className="flex items-center justify-center py-12">
-                    <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-                </div>
+                <p className="text-muted text-sm">Chargement…</p>
             ) : tasks.length === 0 ? (
-                <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-8 text-center">
-                    <ClipboardList className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                        Aucune tâche
-                    </h3>
-                    <p className="text-slate-500 dark:text-slate-400 mb-4">
-                        Ajoutez vos examens ou événements avec des dates connues
-                    </p>
-                    <button
-                        onClick={() => setShowForm(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Ajouter une tâche
-                    </button>
+                <div className="rounded-[28px] bg-surface p-8 text-center">
+                    <p className="text-muted">Aucune tâche pour l'instant.</p>
                 </div>
             ) : (
                 <>
-                    {/* Tâches à venir */}
                     {upcomingTasks.length > 0 && (
-                        <div className="space-y-3">
-                            <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                À venir ({upcomingTasks.length})
-                            </h3>
-                            <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
-                                {upcomingTasks.map((task) => {
-                                    const urgency = getUrgencyBadge(task.daysUntil);
-                                    return (
-                                        <div
-                                            key={task.id}
-                                            onClick={() => setSelectedTask(task)}
-                                            className={`rounded-xl border-2 p-4 transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] cursor-pointer ${getUrgencyClass(task.daysUntil)}`}
-                                        >
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold text-white ${urgency.class}`}>
-                                                            {urgency.text}
-                                                        </span>
-                                                    </div>
-                                                    <h3 className="text-base font-bold mb-1 truncate">{task.title}</h3>
-                                                    <p className="flex items-center gap-1 text-sm opacity-80">
-                                                        <Calendar className="w-3 h-3" />
-                                                        {new Date(task.date).toLocaleDateString('fr-FR', {
-                                                            day: 'numeric',
-                                                            month: 'long',
-                                                            year: 'numeric'
-                                                        })}
-                                                    </p>
-                                                </div>
-                                                <div className="text-right shrink-0">
-                                                    <p className="text-2xl font-bold">J-{task.daysUntil}</p>
-                                                    <button
-                                                        onClick={(e) => handleDelete(task.id, e)}
-                                                        className="mt-1 p-1.5 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                        <div>
+                            <h3 className="font-display text-[22px] pb-2 border-b border-rule">À venir</h3>
+                            {upcomingTasks.map(task => (
+                                <TaskRow key={task.id} task={task} onDelete={handleDelete} />
+                            ))}
                         </div>
                     )}
 
-                    {/* Tâches passées */}
                     {pastTasks.length > 0 && (
-                        <div className="space-y-3">
-                            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
-                                Passées ({pastTasks.length})
-                            </h3>
-                            <div className="grid gap-3 grid-cols-1 md:grid-cols-2 opacity-60">
-                                {pastTasks.map((task) => (
-                                    <div
-                                        key={task.id}
-                                        className={`rounded-xl border-2 p-4 ${getUrgencyClass(task.daysUntil)}`}
-                                    >
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="text-base font-bold mb-1 truncate line-through">{task.title}</h3>
-                                                <p className="flex items-center gap-1 text-sm opacity-80">
-                                                    <Calendar className="w-3 h-3" />
-                                                    {new Date(task.date).toLocaleDateString('fr-FR', {
-                                                        day: 'numeric',
-                                                        month: 'long'
-                                                    })}
-                                                </p>
-                                            </div>
-                                            <button
-                                                onClick={(e) => handleDelete(task.id, e)}
-                                                className="p-1.5 text-slate-400 hover:bg-slate-200 rounded-lg transition-colors"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                        <div>
+                            <h3 className="font-display text-[22px] pb-2 border-b border-rule">Passées</h3>
+                            {pastTasks.map(task => (
+                                <TaskRow key={task.id} task={task} onDelete={handleDelete} faded />
+                            ))}
                         </div>
                     )}
                 </>
-            )}
-
-            {/* Task Detail Modal */}
-            {selectedTask && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-                    onClick={() => setSelectedTask(null)}
-                >
-                    <div
-                        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className={`p-4 ${getUrgencyClass(selectedTask.daysUntil)} border-b-2`}>
-                            <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold text-white ${getUrgencyBadge(selectedTask.daysUntil).class}`}>
-                                            {getUrgencyBadge(selectedTask.daysUntil).text}
-                                        </span>
-                                    </div>
-                                    <h3 className="font-bold text-lg">{selectedTask.title}</h3>
-                                </div>
-                                <button
-                                    onClick={() => setSelectedTask(null)}
-                                    className="p-2 hover:bg-white/30 rounded-lg transition-colors"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="p-5 space-y-4">
-                            {/* Countdown */}
-                            <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                                <p className="text-5xl font-bold text-slate-800 dark:text-slate-100">
-                                    {selectedTask.daysUntil < 0 ? 'Passé' : `J-${selectedTask.daysUntil}`}
-                                </p>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                    {selectedTask.daysUntil < 0 ? 'depuis' : 'jours restants'}
-                                </p>
-                            </div>
-
-                            {/* Date */}
-                            <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                                <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center">
-                                    <Calendar className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-slate-800 dark:text-slate-100">
-                                        {new Date(selectedTask.date).toLocaleDateString('fr-FR', {
-                                            weekday: 'long',
-                                            day: 'numeric',
-                                            month: 'long',
-                                            year: 'numeric'
-                                        })}
-                                    </p>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                                        <Clock className="w-3 h-3" />
-                                        {new Date(selectedTask.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Description */}
-                            {selectedTask.description && (
-                                <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                                    <p className="font-semibold text-slate-800 dark:text-slate-100 mb-1">Notes</p>
-                                    <p className="text-sm text-slate-600 dark:text-slate-400">{selectedTask.description}</p>
-                                </div>
-                            )}
-
-                            {/* Delete button */}
-                            <button
-                                onClick={(e) => {
-                                    handleDelete(selectedTask.id, e);
-                                    setSelectedTask(null);
-                                }}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                                Supprimer cette tâche
-                            </button>
-                        </div>
-                    </div>
-                </div>
             )}
         </div>
     );
