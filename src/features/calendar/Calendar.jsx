@@ -69,7 +69,7 @@ const Calendar = () => {
                 <p className="text-muted text-sm mt-1">Vacances scolaires (Zone C) et jours fériés</p>
             </header>
 
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex flex-wrap items-center gap-4 text-sm">
                 {[
                     { value: 'all', label: `Tous (${allEvents.length})` },
                     { value: 'vacation', label: `Vacances (${vacationCount})` },
@@ -93,14 +93,14 @@ const Calendar = () => {
                     return (
                         <div
                             key={event.id}
-                            className="rounded-[28px] flex items-center gap-5 p-5"
+                            className="rounded-[28px] flex flex-wrap items-center gap-x-5 gap-y-2 p-5"
                             style={{ background: `var(--${family}-bg)`, color: `var(--${family}-ink)` }}
                         >
-                            <div className="font-display text-[34px] tabular-nums" style={{ minWidth: 100 }}>
+                            <div className="font-display text-[34px] tabular-nums shrink-0">
                                 {event.status === 'current' ? '—' : `J-${daysUntil}`}
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <h3 className="text-[18px] font-semibold truncate">
+                            <div className="flex-1 min-w-[140px]">
+                                <h3 className="text-[18px] font-semibold">
                                     {event.name}{event.status === 'current' ? ' · en cours' : ''}
                                 </h3>
                                 <p className="text-sm opacity-75 mt-0.5">

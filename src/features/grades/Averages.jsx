@@ -85,7 +85,7 @@ const Averages = () => {
                 <p className="font-display text-[34px] tabular-nums">{semesterAverage !== null ? semesterAverage : '—'}</p>
             </header>
 
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex flex-wrap items-center gap-4 text-sm">
                 {[1, 2].map(sem => (
                     <button
                         key={sem}
@@ -101,17 +101,17 @@ const Averages = () => {
             <div className="space-y-8">
                 {groupedData.map(group => (
                     <div key={group.category}>
-                        <div className="flex items-baseline justify-between pb-2 border-b border-rule">
-                            <h3 className="font-display text-[22px]">{getCategoryShortName(group.category)}</h3>
-                            <span className="text-sm text-muted">
+                        <div className="flex items-baseline justify-between gap-3 pb-2 border-b border-rule">
+                            <h3 className="font-display text-[22px] flex-1 min-w-0">{getCategoryShortName(group.category)}</h3>
+                            <span className="text-sm text-muted shrink-0 whitespace-nowrap">
                                 moyenne {group.ueAverage !== null ? group.ueAverage.toFixed(2) : '—'}
                             </span>
                         </div>
                         {group.subjects.map(subject => (
-                            <div key={subject.id} className="flex items-center justify-between py-3 border-b border-rule">
-                                <span>{subject.nom}</span>
+                            <div key={subject.id} className="flex items-center justify-between gap-4 py-3 border-b border-rule">
+                                <span className="flex-1 min-w-0">{subject.nom}</span>
                                 <span
-                                    className="font-semibold tabular-nums"
+                                    className="font-semibold tabular-nums shrink-0"
                                     style={subject.average === null ? { color: 'var(--muted)' } : subject.average < 10 ? { color: 'var(--accent)' } : undefined}
                                 >
                                     {subject.average !== null ? subject.average : '—'}

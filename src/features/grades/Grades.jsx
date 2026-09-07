@@ -7,7 +7,7 @@ import { useUEConfig } from '../../shared/hooks/useUEConfig';
 import { GradesSetupGuide } from '../../shared/components/SetupGuide';
 
 const Toggle = ({ options, value, onChange }) => (
-    <div className="flex items-center gap-4 text-sm">
+    <div className="flex flex-wrap items-center gap-4 text-sm">
         {options.map(opt => (
             <button
                 key={opt.value}
@@ -231,9 +231,9 @@ const Grades = () => {
 
                                 return (
                                     <div key={category}>
-                                        <div className="flex items-baseline justify-between pb-2 border-b border-rule">
-                                            <h3 className="font-display text-[22px]">{getCategoryShortName(category)}</h3>
-                                            <span className="text-sm text-muted">
+                                        <div className="flex items-baseline justify-between gap-3 pb-2 border-b border-rule">
+                                            <h3 className="font-display text-[22px] flex-1 min-w-0">{getCategoryShortName(category)}</h3>
+                                            <span className="text-sm text-muted shrink-0 whitespace-nowrap">
                                                 moyenne {categoryAverage !== null ? categoryAverage.toFixed(2) : '—'}
                                             </span>
                                         </div>
@@ -243,8 +243,8 @@ const Grades = () => {
                                             return (
                                                 <div key={ue.id} className="py-3 border-b border-rule">
                                                     <div className="flex items-center justify-between gap-4">
-                                                        <span>{ue.nom}</span>
-                                                        <span className="font-semibold tabular-nums" style={ueAverage !== null && ueAverage < 10 ? { color: 'var(--accent)' } : undefined}>
+                                                        <span className="flex-1 min-w-0">{ue.nom}</span>
+                                                        <span className="font-semibold tabular-nums shrink-0" style={ueAverage !== null && ueAverage < 10 ? { color: 'var(--accent)' } : undefined}>
                                                             {ueAverage !== null ? ueAverage.toFixed(2) : '—'}
                                                         </span>
                                                     </div>
@@ -308,12 +308,12 @@ const Grades = () => {
                                     if (!rankData) return null;
                                     return (
                                         <div key={catName} className="rounded-[28px] bg-surface p-5">
-                                            <div className="flex justify-between items-start pb-2 border-b border-rule">
-                                                <div>
+                                            <div className="flex justify-between items-start gap-3 pb-2 border-b border-rule">
+                                                <div className="flex-1 min-w-0">
                                                     <h4 className="font-semibold text-sm">{getCategoryShortName(catName)}</h4>
                                                     <p className="text-xs text-muted mt-0.5">{rankData.total} participants</p>
                                                 </div>
-                                                <div className="font-display text-xl tabular-nums">
+                                                <div className="font-display text-xl tabular-nums shrink-0 whitespace-nowrap">
                                                     {rankData.rank}<span className="text-xs">{rankData.rank === 1 ? 'er' : 'ème'}</span>
                                                 </div>
                                             </div>
@@ -323,7 +323,7 @@ const Grades = () => {
                                                     return (
                                                         <div key={ue.id} className="flex items-center justify-between py-1.5 border-b border-rule last:border-b-0 text-xs">
                                                             <span className="text-muted truncate max-w-[180px]">{ue.nom}</span>
-                                                            <span className="tabular-nums">{subRank ? `${subRank.rank} / ${subRank.total}` : '—'}</span>
+                                                            <span className="tabular-nums shrink-0">{subRank ? `${subRank.rank} / ${subRank.total}` : '—'}</span>
                                                         </div>
                                                     );
                                                 })}

@@ -270,7 +270,7 @@ const Schedule = () => {
                         {weekLabel} · {formatDurationShort(totalHours)} de cours
                     </p>
                 </div>
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                     <button onClick={handlePrevWeek} className="whitespace-nowrap opacity-70 hover:opacity-100">
                         Semaine précédente
                     </button>
@@ -298,7 +298,7 @@ const Schedule = () => {
             </header>
 
             {viewMode === 'day' && (
-                <div className="flex gap-4 text-sm">
+                <div className="flex flex-wrap gap-4 text-sm">
                     {WEEK_DAYS_SHORT.map((d, i) => (
                         <button
                             key={d}

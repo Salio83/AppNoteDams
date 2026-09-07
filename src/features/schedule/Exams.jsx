@@ -41,14 +41,14 @@ const Exams = () => {
                         return (
                             <div
                                 key={index}
-                                className="rounded-[28px] flex items-center gap-5 p-5"
+                                className="rounded-[28px] flex flex-wrap items-center gap-x-5 gap-y-2 p-5"
                                 style={{ background: `var(--${urgency.family}-bg)`, color: `var(--${urgency.family}-ink)` }}
                             >
-                                <div className="font-display text-[34px] tabular-nums" style={{ minWidth: 100 }}>
+                                <div className="font-display text-[34px] tabular-nums shrink-0">
                                     J-{exam.daysUntil}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="text-[18px] font-semibold truncate">{exam.title}</h3>
+                                <div className="flex-1 min-w-[160px]">
+                                    <h3 className="text-[18px] font-semibold">{exam.title}</h3>
                                     <p className="text-sm opacity-75 mt-0.5">
                                         {new Date(exam.start).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                                         {' · '}

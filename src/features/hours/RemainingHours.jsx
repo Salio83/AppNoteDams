@@ -30,7 +30,7 @@ const RemainingHours = () => {
                 <h2 className="font-display text-2xl">Heures</h2>
             </header>
 
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex flex-wrap items-center gap-4 text-sm">
                 {['S1', 'S2'].map(s => (
                     <button
                         key={s}
@@ -65,8 +65,8 @@ const RemainingHours = () => {
                         return (
                             <div key={subject.id} className="py-3 border-b border-rule">
                                 <div className="flex items-center justify-between gap-4 mb-2">
-                                    <span>{subject.nom}</span>
-                                    <span className="tabular-nums text-sm shrink-0">
+                                    <span className="flex-1 min-w-0">{subject.nom}</span>
+                                    <span className="tabular-nums text-sm shrink-0 whitespace-nowrap">
                                         {subject.hoursCompleted.toFixed(1)} / {subject.totalHours.toFixed(1)} h
                                     </span>
                                 </div>
