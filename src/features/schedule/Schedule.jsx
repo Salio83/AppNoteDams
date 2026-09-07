@@ -4,6 +4,7 @@ import { getEventColor } from '../../shared/utils/colors';
 import { useSchedule } from '../../shared/context/ScheduleContext';
 import { isExamEvent } from '../../shared/utils/scheduleAnalysis';
 import { ScheduleSetupGuide } from '../../shared/components/SetupGuide';
+import PillButton from '../../shared/components/PillButton';
 
 const WEEK_DAYS_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'];
 const WEEK_DAYS_FULL = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
@@ -270,44 +271,20 @@ const Schedule = () => {
                         {weekLabel} · {formatDurationShort(totalHours)} de cours
                     </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                    <button onClick={handlePrevWeek} className="whitespace-nowrap opacity-70 hover:opacity-100">
-                        Semaine précédente
-                    </button>
-                    <button onClick={handleNextWeek} className="whitespace-nowrap opacity-70 hover:opacity-100">
-                        Semaine suivante
-                    </button>
-                    <span className="whitespace-nowrap">
-                        <button
-                            onClick={() => setViewMode('day')}
-                            style={{ fontWeight: viewMode === 'day' ? 700 : 400 }}
-                            className={viewMode === 'day' ? '' : 'opacity-70 hover:opacity-100'}
-                        >
-                            Jour
-                        </button>
-                        {' / '}
-                        <button
-                            onClick={() => setViewMode('week')}
-                            style={{ fontWeight: viewMode === 'week' ? 700 : 400 }}
-                            className={viewMode === 'week' ? '' : 'opacity-70 hover:opacity-100'}
-                        >
-                            Semaine
-                        </button>
-                    </span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                    <PillButton onClick={handlePrevWeek}>Semaine précédente</PillButton>
+                    <PillButton onClick={handleNextWeek}>Semaine suivante</PillButton>
+                    <PillButton active={viewMode === 'day'} onClick={() => setViewMode('day')}>Jour</PillButton>
+                    <PillButton active={viewMode === 'week'} onClick={() => setViewMode('week')}>Semaine</PillButton>
                 </div>
             </header>
 
             {viewMode === 'day' && (
-                <div className="flex flex-wrap gap-4 text-sm">
+                <div className="flex flex-wrap gap-1.5">
                     {WEEK_DAYS_SHORT.map((d, i) => (
-                        <button
-                            key={d}
-                            onClick={() => setSelectedDayIndex(i)}
-                            style={{ fontWeight: selectedDayIndex === i ? 700 : 400 }}
-                            className={selectedDayIndex === i ? '' : 'opacity-55 hover:opacity-100'}
-                        >
+                        <PillButton key={d} active={selectedDayIndex === i} onClick={() => setSelectedDayIndex(i)}>
                             {d}
-                        </button>
+                        </PillButton>
                     ))}
                 </div>
             )}

@@ -5,18 +5,14 @@ import { useAuth } from '../../shared/context/AuthContext';
 import { getCategoryShortName } from '../../shared/utils/colors';
 import { useUEConfig } from '../../shared/hooks/useUEConfig';
 import { GradesSetupGuide } from '../../shared/components/SetupGuide';
+import PillButton from '../../shared/components/PillButton';
 
 const Toggle = ({ options, value, onChange }) => (
-    <div className="flex flex-wrap items-center gap-4 text-sm">
+    <div className="flex flex-wrap items-center gap-1.5">
         {options.map(opt => (
-            <button
-                key={opt.value}
-                onClick={() => onChange(opt.value)}
-                style={{ fontWeight: value === opt.value ? 700 : 400 }}
-                className={value === opt.value ? '' : 'opacity-55 hover:opacity-100'}
-            >
+            <PillButton key={opt.value} active={value === opt.value} onClick={() => onChange(opt.value)}>
                 {opt.label}
-            </button>
+            </PillButton>
         ))}
     </div>
 );

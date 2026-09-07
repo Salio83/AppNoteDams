@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PillButton from '../../shared/components/PillButton';
 
 // Vacances scolaires Zone C (Montpellier) 2025-2026
 const VACANCES = [
@@ -69,20 +70,15 @@ const Calendar = () => {
                 <p className="text-muted text-sm mt-1">Vacances scolaires (Zone C) et jours fériés</p>
             </header>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm">
+            <div className="flex flex-wrap items-center gap-1.5">
                 {[
                     { value: 'all', label: `Tous (${allEvents.length})` },
                     { value: 'vacation', label: `Vacances (${vacationCount})` },
                     { value: 'holiday', label: `Jours fériés (${holidayCount})` },
                 ].map(opt => (
-                    <button
-                        key={opt.value}
-                        onClick={() => setFilter(opt.value)}
-                        style={{ fontWeight: filter === opt.value ? 700 : 400 }}
-                        className={filter === opt.value ? '' : 'opacity-55 hover:opacity-100'}
-                    >
+                    <PillButton key={opt.value} active={filter === opt.value} onClick={() => setFilter(opt.value)}>
                         {opt.label}
-                    </button>
+                    </PillButton>
                 ))}
             </div>
 

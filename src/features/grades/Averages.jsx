@@ -4,6 +4,7 @@ import { useAuth } from '../../shared/context/AuthContext';
 import { useUEConfig } from '../../shared/hooks/useUEConfig';
 import { getCategoryShortName } from '../../shared/utils/colors';
 import { GradesSetupGuide } from '../../shared/components/SetupGuide';
+import PillButton from '../../shared/components/PillButton';
 
 const Averages = () => {
     const { user } = useAuth();
@@ -85,16 +86,11 @@ const Averages = () => {
                 <p className="font-display text-[34px] tabular-nums">{semesterAverage !== null ? semesterAverage : '—'}</p>
             </header>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm">
+            <div className="flex flex-wrap items-center gap-1.5">
                 {[1, 2].map(sem => (
-                    <button
-                        key={sem}
-                        onClick={() => setSelectedSemester(sem)}
-                        style={{ fontWeight: selectedSemester === sem ? 700 : 400 }}
-                        className={selectedSemester === sem ? '' : 'opacity-55 hover:opacity-100'}
-                    >
+                    <PillButton key={sem} active={selectedSemester === sem} onClick={() => setSelectedSemester(sem)}>
                         Semestre {sem}
-                    </button>
+                    </PillButton>
                 ))}
             </div>
 

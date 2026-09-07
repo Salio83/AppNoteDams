@@ -13,9 +13,10 @@ const NAV_LINKS = [
     { to: '/calendar', label: 'Calendrier' },
 ];
 
-const navLinkClass = ({ isActive }) =>
-    `inline-block py-3 text-sm whitespace-nowrap transition-opacity ${isActive ? 'opacity-100' : 'opacity-55 hover:opacity-100'
-    }`;
+const navPillClass = 'px-3 py-1.5 rounded-full text-[13px] whitespace-nowrap transition-colors';
+const navPillStyle = ({ isActive }) => (isActive
+    ? { background: 'var(--accent-solid)', color: 'var(--bg)', fontWeight: 600 }
+    : { background: 'var(--surface)', color: 'var(--ink)', opacity: 0.75 });
 
 const Layout = ({ children }) => {
     const { isDark, toggleTheme } = useTheme();
@@ -24,30 +25,31 @@ const Layout = ({ children }) => {
         <div className="min-h-screen flex flex-col bg-bg text-ink">
             <header className="sticky top-0 z-40 bg-bg border-b border-rule">
                 <div
-                    className="mx-auto flex flex-wrap items-center justify-between gap-x-8 gap-y-1"
-                    style={{ maxWidth: 1180, padding: '0 clamp(16px,4vw,48px)' }}
+                    className="mx-auto flex flex-wrap items-center justify-between gap-x-8 gap-y-2"
+                    style={{ maxWidth: 1180, padding: '10px clamp(16px,4vw,48px)' }}
                 >
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-                        <NavLink to="/" end className="font-display text-[22px] py-3 shrink-0">
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                        <NavLink to="/" end className="font-display text-[22px] shrink-0">
                             Krono
                         </NavLink>
-                        <nav className="flex flex-wrap items-center gap-x-5 gap-y-1">
+                        <nav className="flex flex-wrap items-center gap-1.5">
                             {NAV_LINKS.map(({ to, label, end }) => (
-                                <NavLink key={to} to={to} end={end} className={navLinkClass}>
+                                <NavLink key={to} to={to} end={end} className={navPillClass} style={navPillStyle}>
                                     {label}
                                 </NavLink>
                             ))}
                         </nav>
                     </div>
 
-                    <div className="flex items-center gap-5 shrink-0">
+                    <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                         <button
                             onClick={toggleTheme}
-                            className="py-3 text-sm opacity-70 hover:opacity-100 transition-opacity"
+                            className={navPillClass}
+                            style={{ background: 'var(--surface)', color: 'var(--ink)', opacity: 0.75 }}
                         >
                             {isDark ? 'Clair' : 'Sombre'}
                         </button>
-                        <NavLink to="/profile" className={navLinkClass}>
+                        <NavLink to="/profile" className={navPillClass} style={navPillStyle}>
                             Profil
                         </NavLink>
                     </div>

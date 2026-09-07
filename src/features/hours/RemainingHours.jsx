@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSchedule } from '../../shared/context/ScheduleContext';
+import PillButton from '../../shared/components/PillButton';
 
 const Tile = ({ label, value }) => (
     <div className="rounded-[28px] bg-surface p-5">
@@ -30,16 +31,11 @@ const RemainingHours = () => {
                 <h2 className="font-display text-2xl">Heures</h2>
             </header>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm">
+            <div className="flex flex-wrap items-center gap-1.5">
                 {['S1', 'S2'].map(s => (
-                    <button
-                        key={s}
-                        onClick={() => setSemester(s)}
-                        style={{ fontWeight: semester === s ? 700 : 400 }}
-                        className={semester === s ? '' : 'opacity-55 hover:opacity-100'}
-                    >
+                    <PillButton key={s} active={semester === s} onClick={() => setSemester(s)}>
                         Semestre {s.slice(1)}
-                    </button>
+                    </PillButton>
                 ))}
             </div>
 
